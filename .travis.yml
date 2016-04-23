@@ -1,0 +1,8 @@
+language: go
+go:
+- 1.5
+script:
+- make lint
+- make test
+after_script:
+- make cover
