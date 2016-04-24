@@ -12,18 +12,18 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver"
-	"github.com/google/go-github/github"
+	"github.com/octokit/go-octokit/octokit"
 )
 
 type Ghch struct {
 	RepoPath string
-	client   *github.Client
+	client   *octokit.Client
 }
 
 func New(repo string) *Ghch {
 	return &Ghch{
 		RepoPath: repo,
-		client:   github.NewClient(nil),
+		client:   octokit.NewClient(nil),
 	}
 }
 
@@ -76,13 +76,14 @@ func (gh *Ghch) Remote() (owner, repo string) {
 	return
 }
 
-func (gh *Ghch) MergedPRs(argv ...string) (prs []*github.PullRequest) {
+func (gh *Ghch) MergedPRs(argv ...string) (prs []*octokit.PullRequest) {
 	owner, repo := gh.Remote()
 	nums := gh.MergedPRNums(argv...)
 	for _, num := range nums {
-		pr, _, err := gh.client.PullRequests.Get(owner, repo, num)
-		if err != nil {
-			log.Print(err)
+		url, _ := octokit.PullRequestsURL.Expand(octokit.M{"owner": owner, "repo": repo, "number": num})
+		pr, r := gh.client.PullRequests(url).One()
+		if r.HasError() {
+			log.Print(r.Err)
 			continue
 		}
 		prs = append(prs, pr)
