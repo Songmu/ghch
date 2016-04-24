@@ -3,25 +3,27 @@ package ghch
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
-	"github.com/google/go-github/github"
 	"github.com/Masterminds/semver"
+	"github.com/google/go-github/github"
 )
 
 type Ghch struct {
 	RepoPath string
-	client *github.Client
+	client   *github.Client
 }
 
 func New(repo string) *Ghch {
 	return &Ghch{
-		RepoPath: "/Users/Songmu/dev/src/github.com/mackerelio/mackerel-agent",
-		client: github.NewClient(nil),
+		RepoPath: repo,
+		client:   github.NewClient(nil),
 	}
 }
 
@@ -60,7 +62,7 @@ func (gh *Ghch) Versions() []string {
 
 var repoURLReg = regexp.MustCompile(`([^/:]+)/([^/]+?)(?:\.git)?$`)
 
-func (gh *Ghch) Remote() (org, repo string) {
+func (gh *Ghch) Remote() (owner, repo string) {
 	out, _ := gh.Cmd("remote", "-v")
 	remotes := strings.Split(out, "\n")
 	for _, r := range remotes {
@@ -74,9 +76,23 @@ func (gh *Ghch) Remote() (org, repo string) {
 	return
 }
 
+func (gh *Ghch) MergedPRs(argv ...string) (prs []*github.PullRequest) {
+	owner, repo := gh.Remote()
+	nums := gh.MergedPRNums(argv...)
+	for _, num := range nums {
+		pr, _, err := gh.client.PullRequests.Get(owner, repo, num)
+		if err != nil {
+			log.Print(err)
+			continue
+		}
+		prs = append(prs, pr)
+	}
+	return
+}
+
 var prMergeReg = regexp.MustCompile(`^[a-f0-9]{7} Merge pull request #([0-9]+) from`)
 
-func (gh *Ghch) MergedPRNums(argv ...string) (nums []string) {
+func (gh *Ghch) MergedPRNums(argv ...string) (nums []int) {
 	var from, to string
 	if len(argv) > 0 {
 		from = argv[0]
@@ -91,7 +107,7 @@ func (gh *Ghch) MergedPRNums(argv ...string) (nums []string) {
 		}
 		from = vers[0]
 	}
-	revisionRange := fmt.Sprintf("%s...%s", from, to)
+	revisionRange := fmt.Sprintf("%s..%s", from, to)
 	out, err := gh.Cmd("log", revisionRange, "--merges", "--oneline")
 	if err != nil {
 		return
@@ -99,7 +115,8 @@ func (gh *Ghch) MergedPRNums(argv ...string) (nums []string) {
 	lines := strings.Split(out, "\n")
 	for _, line := range lines {
 		if matches := prMergeReg.FindStringSubmatch(line); len(matches) > 1 {
-			nums = append(nums, matches[1])
+			i, _ := strconv.Atoi(matches[1])
+			nums = append(nums, i)
 		}
 	}
 	return
