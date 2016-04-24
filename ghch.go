@@ -17,12 +17,14 @@ import (
 
 type Ghch struct {
 	RepoPath string
+	Remote   string
 	client   *octokit.Client
 }
 
 func New(repo string) *Ghch {
 	return &Ghch{
 		RepoPath: repo,
+		// XXX authentication
 		client:   octokit.NewClient(nil),
 	}
 }
@@ -60,14 +62,21 @@ func (gh *Ghch) Versions() []string {
 	return vers
 }
 
+func (gh *Ghch) getRemote() string {
+	if gh.Remote != "" {
+		return gh.Remote
+	}
+	return "origin"
+}
+
 var repoURLReg = regexp.MustCompile(`([^/:]+)/([^/]+?)(?:\.git)?$`)
 
-func (gh *Ghch) Remote() (owner, repo string) {
+func (gh *Ghch) ownerAndRepo() (owner, repo string) {
 	out, _ := gh.Cmd("remote", "-v")
 	remotes := strings.Split(out, "\n")
 	for _, r := range remotes {
 		fields := strings.Fields(r)
-		if len(fields) > 1 && fields[0] == "origin" {
+		if len(fields) > 1 && fields[0] == gh.getRemote() {
 			if matches := repoURLReg.FindStringSubmatch(fields[1]); len(matches) > 2 {
 				return matches[1], matches[2]
 			}
@@ -77,7 +86,7 @@ func (gh *Ghch) Remote() (owner, repo string) {
 }
 
 func (gh *Ghch) MergedPRs(argv ...string) (prs []*octokit.PullRequest) {
-	owner, repo := gh.Remote()
+	owner, repo := gh.ownerAndRepo()
 	nums := gh.MergedPRNums(argv...)
 	for _, num := range nums {
 		url, _ := octokit.PullRequestsURL.Expand(octokit.M{"owner": owner, "repo": repo, "number": num})
