@@ -9,11 +9,20 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/google/go-github/github"
 	"github.com/Masterminds/semver"
 )
 
 type Ghch struct {
 	RepoPath string
+	client *github.Client
+}
+
+func New(repo string) *Ghch {
+	return &Ghch{
+		RepoPath: "/Users/Songmu/dev/src/github.com/mackerelio/mackerel-agent",
+		client: github.NewClient(nil),
+	}
 }
 
 func (gh *Ghch) Cmd(argv ...string) (string, error) {
@@ -47,6 +56,22 @@ func (gh *Ghch) Versions() []string {
 		vers[i] = v.Original()
 	}
 	return vers
+}
+
+var repoURLReg = regexp.MustCompile(`([^/:]+)/([^/]+?)(?:\.git)?$`)
+
+func (gh *Ghch) Remote() (org, repo string) {
+	out, _ := gh.Cmd("remote", "-v")
+	remotes := strings.Split(out, "\n")
+	for _, r := range remotes {
+		fields := strings.Fields(r)
+		if len(fields) > 1 && fields[0] == "origin" {
+			if matches := repoURLReg.FindStringSubmatch(fields[1]); len(matches) > 2 {
+				return matches[1], matches[2]
+			}
+		}
+	}
+	return
 }
 
 var prMergeReg = regexp.MustCompile(`^[a-f0-9]{7} Merge pull request #([0-9]+) from`)
