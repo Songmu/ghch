@@ -25,7 +25,7 @@ func New(repo string) *Ghch {
 	return &Ghch{
 		RepoPath: repo,
 		// XXX authentication
-		client:   octokit.NewClient(nil),
+		client: octokit.NewClient(nil),
 	}
 }
 
@@ -45,6 +45,10 @@ var verReg = regexp.MustCompile(`^v?[0-9]+(?:\.[0-9]+){0,2}$`)
 
 func (gh *Ghch) Versions() []string {
 	out, _ := gh.Cmd("tag")
+	return parseVerions(out)
+}
+
+func parseVerions(out string) []string {
 	rawTags := strings.Split(out, "\n")
 	var versions []*semver.Version
 	for _, tag := range rawTags {
