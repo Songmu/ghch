@@ -29,7 +29,7 @@ func New(repo string) *Ghch {
 	}
 }
 
-func (gh *Ghch) Cmd(argv ...string) (string, error) {
+func (gh *Ghch) cmd(argv ...string) (string, error) {
 	arg := []string{"-C", gh.RepoPath}
 	arg = append(arg, argv...)
 	cmd := exec.Command("git", arg...)
@@ -43,8 +43,8 @@ func (gh *Ghch) Cmd(argv ...string) (string, error) {
 
 var verReg = regexp.MustCompile(`^v?[0-9]+(?:\.[0-9]+){0,2}$`)
 
-func (gh *Ghch) Versions() []string {
-	out, _ := gh.Cmd("tag")
+func (gh *Ghch) versions() []string {
+	out, _ := gh.cmd("tag")
 	return parseVerions(out)
 }
 
@@ -76,7 +76,7 @@ func (gh *Ghch) getRemote() string {
 var repoURLReg = regexp.MustCompile(`([^/:]+)/([^/]+?)(?:\.git)?$`)
 
 func (gh *Ghch) ownerAndRepo() (owner, repo string) {
-	out, _ := gh.Cmd("remote", "-v")
+	out, _ := gh.cmd("remote", "-v")
 	remotes := strings.Split(out, "\n")
 	for _, r := range remotes {
 		fields := strings.Fields(r)
@@ -89,9 +89,9 @@ func (gh *Ghch) ownerAndRepo() (owner, repo string) {
 	return
 }
 
-func (gh *Ghch) MergedPRs(argv ...string) (prs []*octokit.PullRequest) {
+func (gh *Ghch) MergedPRs(from, to string) (prs []*octokit.PullRequest) {
 	owner, repo := gh.ownerAndRepo()
-	nums := gh.MergedPRNums(argv...)
+	nums := gh.MergedPRNums(from, to)
 	for _, num := range nums {
 		url, _ := octokit.PullRequestsURL.Expand(octokit.M{"owner": owner, "repo": repo, "number": num})
 		pr, r := gh.client.PullRequests(url).One()
@@ -106,26 +106,23 @@ func (gh *Ghch) MergedPRs(argv ...string) (prs []*octokit.PullRequest) {
 
 var prMergeReg = regexp.MustCompile(`^[a-f0-9]{7} Merge pull request #([0-9]+) from`)
 
-func (gh *Ghch) MergedPRNums(argv ...string) (nums []int) {
-	var from, to string
-	if len(argv) > 0 {
-		from = argv[0]
-	}
-	if len(argv) > 1 {
-		from = argv[1]
-	}
+func (gh *Ghch) MergedPRNums(from, to string) (nums []int) {
 	if from == "" {
-		vers := gh.Versions()
+		vers := gh.versions()
 		if len(vers) < 1 {
 			return
 		}
 		from = vers[0]
 	}
 	revisionRange := fmt.Sprintf("%s..%s", from, to)
-	out, err := gh.Cmd("log", revisionRange, "--merges", "--oneline")
+	out, err := gh.cmd("log", revisionRange, "--merges", "--oneline")
 	if err != nil {
 		return
 	}
+	return parseMergedPRNums(out)
+}
+
+func parseMergedPRNums(out string) (nums []int) {
 	lines := strings.Split(out, "\n")
 	for _, line := range lines {
 		if matches := prMergeReg.FindStringSubmatch(line); len(matches) > 1 {
