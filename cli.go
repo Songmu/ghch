@@ -15,9 +15,10 @@ type ghOpts struct {
 	From     string `short:"f" long:"from" description:"git commit revision range start from"`
 	To       string `short:"t" long:"to" description:"git commit revision range end to"`
 	Token    string `          long:"token" description:"github token"`
-	//Format   string `short:"F" long:"format" default:"json" description:"json or markdown"`
-	Verbose bool   `short:"v" long:"verbose"`
-	Remote  string `          long:"remote" default:"origin"`
+	Verbose  bool   `short:"v" long:"verbose"`
+	Remote   string `          long:"remote" default:"origin"`
+	// All     bool   `short:"A" long:"all" `
+	// Format   string `short:"F" long:"format" default:"json" description:"json or markdown"`
 	// Tmpl string
 }
 
@@ -44,7 +45,7 @@ func (cli *CLI) Run(argv []string) int {
 		token:    opts.Token,
 	}).initialize()
 
-	if opts.From == "" {
+	if opts.From == "" && opts.To == "" {
 		opts.From = gh.getLatestSemverTag()
 	}
 	r := gh.getResult(opts.From, opts.To)
