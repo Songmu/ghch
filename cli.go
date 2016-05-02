@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
+	"time"
 
 	"github.com/jessevdk/go-flags"
 	"github.com/octokit/go-octokit/octokit"
@@ -62,10 +64,15 @@ func parseArgs(args []string) (*ghOpts, error) {
 
 func (gh *ghch) getResult(from, to string) result {
 	r := gh.mergedPRs(from, to)
+	t, err := gh.getChangedAt(to)
+	if err != nil {
+		log.Print(err)
+	}
 	return result{
 		PullRequests: r,
 		FromRevision: from,
 		ToRevision:   to,
+		ChangedAt:    t,
 	}
 }
 
@@ -73,4 +80,5 @@ type result struct {
 	PullRequests []*octokit.PullRequest `json:"pull_requests"`
 	FromRevision string                 `json:"from_revision"`
 	ToRevision   string                 `json:"to_revision"`
+	ChangedAt    time.Time              `json:"changed_at"`
 }
