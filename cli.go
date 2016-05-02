@@ -34,8 +34,13 @@ func (cli *CLI) Run(argv []string) int {
 	if err != nil {
 		return exitCodeParseFlagError
 	}
-	ghch := New(opts.RepoPath)
-	r := ghch.mergedPRs(opts.From, opts.To)
+
+	gh := (&ghch{
+		remote:   opts.Remote,
+		repoPath: opts.RepoPath,
+		verbose:  opts.Verbose,
+	}).initialize()
+	r := gh.mergedPRs(opts.From, opts.To)
 	jsn, _ := json.MarshalIndent(r, "", "  ")
 	fmt.Fprintln(cli.OutStream, string(jsn))
 	return exitCodeOK

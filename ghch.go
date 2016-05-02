@@ -16,21 +16,20 @@ import (
 )
 
 type ghch struct {
-	RepoPath string
-	Remote   string
+	repoPath string
+	remote   string
+	verbose  bool
 	client   *octokit.Client
 }
 
-func New(repo string) *ghch {
-	return &ghch{
-		RepoPath: repo,
-		// XXX authentication
-		client: octokit.NewClient(nil),
-	}
+func (gh *ghch) initialize() *ghch {
+	// XXX authentication
+	gh.client = octokit.NewClient(nil)
+	return gh
 }
 
 func (gh *ghch) cmd(argv ...string) (string, error) {
-	arg := []string{"-C", gh.RepoPath}
+	arg := []string{"-C", gh.repoPath}
 	arg = append(arg, argv...)
 	cmd := exec.Command("git", arg...)
 	cmd.Env = append(os.Environ(), "LANG=C")
@@ -68,8 +67,8 @@ func parseVerions(out string) []string {
 }
 
 func (gh *ghch) getRemote() string {
-	if gh.Remote != "" {
-		return gh.Remote
+	if gh.remote != "" {
+		return gh.remote
 	}
 	return "origin"
 }
@@ -100,7 +99,10 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 			log.Print(r.Err)
 			continue
 		}
-		prs = append(prs, reducePR(pr))
+		if !gh.verbose {
+			pr = reducePR(pr)
+		}
+		prs = append(prs, pr)
 	}
 	return
 }
