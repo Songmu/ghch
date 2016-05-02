@@ -14,19 +14,36 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/octokit/go-octokit/octokit"
+	"github.com/tcnksm/go-gitconfig"
 )
 
 type ghch struct {
 	repoPath string
 	remote   string
 	verbose  bool
+	token    string
 	client   *octokit.Client
 }
 
 func (gh *ghch) initialize() *ghch {
-	// XXX authentication
-	gh.client = octokit.NewClient(nil)
+	var auth octokit.AuthMethod
+	gh.setToken()
+	if gh.token != "" {
+		auth = octokit.TokenAuth{AccessToken: gh.token}
+	}
+	gh.client = octokit.NewClient(auth)
 	return gh
+}
+
+func (gh *ghch) setToken() {
+	if gh.token != "" {
+		return
+	}
+	if gh.token = os.Getenv("GITHUB_TOKEN"); gh.token != "" {
+		return
+	}
+	gh.token, _ = gitconfig.GithubToken()
+	return
 }
 
 func (gh *ghch) cmd(argv ...string) (string, error) {

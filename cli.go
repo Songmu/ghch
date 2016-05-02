@@ -13,9 +13,10 @@ type ghOpts struct {
 	GitPath  string `short:"g" long:"git" default:"git" description:"git path"`
 	From     string `short:"f" long:"from" description:"git commit revision range start from"`
 	To       string `short:"t" long:"to" description:"git commit revision range end to"`
-	Format   string `short:"F" long:"format" default:"json" description:"json or markdown"`
-	Verbose  bool   `short:"v" long:"verbose"`
-	Remote   string `          long:"remote" default:"origin"`
+	Token    string `          long:"token" description:"github token"`
+	//Format   string `short:"F" long:"format" default:"json" description:"json or markdown"`
+	Verbose bool   `short:"v" long:"verbose"`
+	Remote  string `          long:"remote" default:"origin"`
 	// Tmpl string
 }
 
@@ -39,6 +40,7 @@ func (cli *CLI) Run(argv []string) int {
 		remote:   opts.Remote,
 		repoPath: opts.RepoPath,
 		verbose:  opts.Verbose,
+		token:    opts.Token,
 	}).initialize()
 	r := gh.mergedPRs(opts.From, opts.To)
 	jsn, _ := json.MarshalIndent(r, "", "  ")
