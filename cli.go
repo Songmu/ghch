@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/jessevdk/go-flags"
+	"github.com/octokit/go-octokit/octokit"
 )
 
 type ghOpts struct {
@@ -42,7 +43,7 @@ func (cli *CLI) Run(argv []string) int {
 		verbose:  opts.Verbose,
 		token:    opts.Token,
 	}).initialize()
-	r := gh.mergedPRs(opts.From, opts.To)
+	r := gh.getResult(opts.From, opts.To)
 	jsn, _ := json.MarshalIndent(r, "", "  ")
 	fmt.Fprintln(cli.OutStream, string(jsn))
 	return exitCodeOK
@@ -52,4 +53,19 @@ func parseArgs(args []string) (*ghOpts, error) {
 	opts := &ghOpts{}
 	_, err := flags.ParseArgs(opts, args)
 	return opts, err
+}
+
+func (gh *ghch) getResult(from, to string) result {
+	r := gh.mergedPRs(from, to)
+	return result{
+		PullRequests: r,
+		FromRevision: from,
+		ToRevision:   to,
+	}
+}
+
+type result struct {
+	PullRequests []*octokit.PullRequest `json:"pullRequests"`
+	FromRevision string                 `json:"fromRevision"`
+	ToRevision   string                 `json:"toRevision"`
 }
