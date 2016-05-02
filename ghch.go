@@ -142,15 +142,19 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 	return
 }
 
+func (gh *ghch) getLatestSemverTag() string {
+		vers := gh.versions()
+		if len(vers) < 1 {
+			return ""
+		}
+		return vers[0]
+}
+
 var prMergeReg = regexp.MustCompile(`^[a-f0-9]{7} Merge pull request #([0-9]+) from`)
 
 func (gh *ghch) mergedPRNums(from, to string) (nums []int) {
 	if from == "" {
-		vers := gh.versions()
-		if len(vers) < 1 {
-			return
-		}
-		from = vers[0]
+		return
 	}
 	revisionRange := fmt.Sprintf("%s..%s", from, to)
 	out, err := gh.cmd("log", revisionRange, "--merges", "--oneline")

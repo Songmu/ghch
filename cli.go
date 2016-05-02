@@ -43,6 +43,10 @@ func (cli *CLI) Run(argv []string) int {
 		verbose:  opts.Verbose,
 		token:    opts.Token,
 	}).initialize()
+
+	if opts.From == "" {
+		opts.From = gh.getLatestSemverTag()
+	}
 	r := gh.getResult(opts.From, opts.To)
 	jsn, _ := json.MarshalIndent(r, "", "  ")
 	fmt.Fprintln(cli.OutStream, string(jsn))
@@ -65,7 +69,7 @@ func (gh *ghch) getResult(from, to string) result {
 }
 
 type result struct {
-	PullRequests []*octokit.PullRequest `json:"pullRequests"`
-	FromRevision string                 `json:"fromRevision"`
-	ToRevision   string                 `json:"toRevision"`
+	PullRequests []*octokit.PullRequest `json:"pull_requests"`
+	FromRevision string                 `json:"from_revision"`
+	ToRevision   string                 `json:"to_revision"`
 }
