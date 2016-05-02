@@ -1,8 +1,10 @@
 package ghch
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"text/template"
 	"io"
 	"log"
 	"time"
@@ -19,8 +21,8 @@ type ghOpts struct {
 	Token    string `          long:"token" description:"github token"`
 	Verbose  bool   `short:"v" long:"verbose"`
 	Remote   string `          long:"remote" default:"origin"`
+	Format   string `short:"F" long:"format" default:"json" description:"json or markdown"`
 	// All     bool   `short:"A" long:"all" `
-	// Format   string `short:"F" long:"format" default:"json" description:"json or markdown"`
 	// Tmpl string
 }
 
@@ -52,8 +54,18 @@ func (cli *CLI) Run(argv []string) int {
 		opts.From = gh.getLatestSemverTag()
 	}
 	r := gh.getResult(opts.From, opts.To)
-	jsn, _ := json.MarshalIndent(r, "", "  ")
-	fmt.Fprintln(cli.OutStream, string(jsn))
+
+	if opts.Format == "markdown" {
+		str, err := r.toMkdn()
+		if err != nil {
+			log.Print(err)
+		} else {
+			fmt.Fprintln(cli.OutStream, str)
+		}
+	} else {
+		jsn, _ := json.MarshalIndent(r, "", "  ")
+		fmt.Fprintln(cli.OutStream, string(jsn))
+	}
 	return exitCodeOK
 }
 
@@ -69,11 +81,14 @@ func (gh *ghch) getResult(from, to string) result {
 	if err != nil {
 		log.Print(err)
 	}
+	owner, repo := gh.ownerAndRepo()
 	return result{
 		PullRequests: r,
 		FromRevision: from,
 		ToRevision:   to,
 		ChangedAt:    t,
+		Owner:        owner,
+		Repo:         repo,
 	}
 }
 
@@ -82,4 +97,31 @@ type result struct {
 	FromRevision string                 `json:"from_revision"`
 	ToRevision   string                 `json:"to_revision"`
 	ChangedAt    time.Time              `json:"changed_at"`
+	Owner        string                 `json:"owner"`
+	Repo         string                 `json:"repo"`
+}
+
+var tmplStr = `{{ $ret := . }}
+## [{{.ToRevision}}](https://github.com/{{.Owner}}/{{.Repo}}/releases/tag/{{.ToRevision}}) ({{.ChangedAt.Format "2006-01-02"}})
+{{range .PullRequests}}
+* {{.Title}} [#{{.Number}}](https://github.com/{{$ret.Owner}}/{{$ret.Repo}}/pull/{{.Number}}) [{{.User.Login}}](https://github.com/{{.User.Login}}){{end}}
+`
+
+var mdTmpl *template.Template
+
+func init() {
+	var err error
+	mdTmpl, err = template.New("md-changelog").Parse(tmplStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (rs result) toMkdn() (string, error) {
+	var b bytes.Buffer
+	err := mdTmpl.Execute(&b, rs)
+	if err != nil {
+		return "", err
+	}
+	return b.String(), nil
 }
