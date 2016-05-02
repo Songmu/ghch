@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"text/template"
 	"io"
 	"log"
+	"strings"
+	"text/template"
 	"time"
 
 	"github.com/jessevdk/go-flags"
@@ -22,7 +23,7 @@ type ghOpts struct {
 	Verbose  bool   `short:"v" long:"verbose"`
 	Remote   string `          long:"remote" default:"origin"`
 	Format   string `short:"F" long:"format" default:"json" description:"json or markdown"`
-	// All     bool   `short:"A" long:"all" `
+	All      bool   `short:"A" long:"all" `
 	// Tmpl string
 }
 
@@ -50,21 +51,43 @@ func (cli *CLI) Run(argv []string) int {
 		token:    opts.Token,
 	}).initialize()
 
-	if opts.From == "" && opts.To == "" {
-		opts.From = gh.getLatestSemverTag()
-	}
-	r := gh.getsection(opts.From, opts.To)
-
-	if opts.Format == "markdown" {
-		str, err := r.toMkdn()
-		if err != nil {
-			log.Print(err)
+	if opts.All {
+		chlog := changelog{}
+		prevRev := ""
+		for _, rev := range gh.versions() {
+			r := gh.getSection(rev, prevRev)
+			chlog.Sections = append(chlog.Sections, r)
+			prevRev = rev
+		}
+		r := gh.getSection("", prevRev)
+		chlog.Sections = append(chlog.Sections, r)
+		if opts.Format == "markdown" {
+			results := make([]string, len(chlog.Sections))
+			for i, v := range chlog.Sections {
+				results[i], _ = v.toMkdn()
+			}
+			fmt.Println(cli.OutStream, strings.Join(results, "\n"))
 		} else {
-			fmt.Fprintln(cli.OutStream, str)
+			jsn, _ := json.MarshalIndent(r, "", "  ")
+			fmt.Fprintln(cli.OutStream, string(jsn))
 		}
 	} else {
-		jsn, _ := json.MarshalIndent(r, "", "  ")
-		fmt.Fprintln(cli.OutStream, string(jsn))
+		if opts.From == "" && opts.To == "" {
+			opts.From = gh.getLatestSemverTag()
+		}
+		r := gh.getSection(opts.From, opts.To)
+
+		if opts.Format == "markdown" {
+			str, err := r.toMkdn()
+			if err != nil {
+				log.Print(err)
+			} else {
+				fmt.Fprintln(cli.OutStream, str)
+			}
+		} else {
+			jsn, _ := json.MarshalIndent(r, "", "  ")
+			fmt.Fprintln(cli.OutStream, string(jsn))
+		}
 	}
 	return exitCodeOK
 }
@@ -75,7 +98,7 @@ func parseArgs(args []string) (*ghOpts, error) {
 	return opts, err
 }
 
-func (gh *ghch) getsection(from, to string) section {
+func (gh *ghch) getSection(from, to string) section {
 	r := gh.mergedPRs(from, to)
 	t, err := gh.getChangedAt(to)
 	if err != nil {
@@ -90,6 +113,10 @@ func (gh *ghch) getsection(from, to string) section {
 		Owner:        owner,
 		Repo:         repo,
 	}
+}
+
+type changelog struct {
+	Sections []section `json:"sections"`
 }
 
 type section struct {

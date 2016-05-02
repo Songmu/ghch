@@ -186,7 +186,7 @@ func (gh *ghch) getChangedAt(rev string) (time.Time, error) {
 	if rev == "" {
 		rev = "HEAD"
 	}
-	out, err := gh.cmd("show", rev, `--format=%ct`)
+	out, err := gh.cmd("show", "-s", rev + "^{commit}", `--format=%ct`)
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "failed to changed at from git revision. `git show` failed")
 	}
