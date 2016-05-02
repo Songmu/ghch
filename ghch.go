@@ -90,7 +90,7 @@ func (gh *Ghch) ownerAndRepo() (owner, repo string) {
 	return
 }
 
-func (gh *Ghch) MergedPRs(from, to string) (prs []*octokit.PullRequest) {
+func (gh *Ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 	owner, repo := gh.ownerAndRepo()
 	nums := gh.mergedPRNums(from, to)
 	for _, num := range nums {

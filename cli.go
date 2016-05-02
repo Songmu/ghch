@@ -13,8 +13,9 @@ type ghOpts struct {
 	GitPath  string `short:"g" long:"git" default:"git" description:"git path"`
 	From     string `short:"f" long:"from" description:"git commit revision range start from"`
 	To       string `short:"t" long:"to" description:"git commit revision range end to"`
-	// Verbose bool
-	// Format string
+	Format   string `short:"F" long:"format" default:"json" description:"json or markdown"`
+	Verbose  bool   `short:"v" long:"verbose"`
+	// Tmpl string
 }
 
 const (
@@ -33,8 +34,8 @@ func (cli *CLI) Run(argv []string) int {
 		return exitCodeParseFlagError
 	}
 	ghch := New(opts.RepoPath)
-	r := ghch.MergedPRs(opts.From, opts.To)
-	jsn, _ := json.Marshal(r)
+	r := ghch.mergedPRs(opts.From, opts.To)
+	jsn, _ := json.MarshalIndent(r, "", "  ")
 	fmt.Fprintln(cli.OutStream, string(jsn))
 	return exitCodeOK
 }
