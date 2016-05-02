@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/Masterminds/semver"
 	"github.com/octokit/go-octokit/octokit"
@@ -92,18 +93,35 @@ func (gh *ghch) ownerAndRepo() (owner, repo string) {
 func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 	owner, repo := gh.ownerAndRepo()
 	nums := gh.mergedPRNums(from, to)
+
+	var wg sync.WaitGroup
+	prCh := make(chan *octokit.PullRequest)
+
+	go func() {
+		for pr := range prCh {
+			prs = append(prs, pr)
+		}
+	}()
+
 	for _, num := range nums {
-		url, _ := octokit.PullRequestsURL.Expand(octokit.M{"owner": owner, "repo": repo, "number": num})
-		pr, r := gh.client.PullRequests(url).One()
-		if r.HasError() {
-			log.Print(r.Err)
-			continue
-		}
-		if !gh.verbose {
-			pr = reducePR(pr)
-		}
-		prs = append(prs, pr)
+		wg.Add(1)
+		go func(num int) {
+			defer wg.Done()
+			url, _ := octokit.PullRequestsURL.Expand(octokit.M{"owner": owner, "repo": repo, "number": num})
+			pr, r := gh.client.PullRequests(url).One()
+			if r.HasError() {
+				log.Print(r.Err)
+				return
+			}
+			if !gh.verbose {
+				pr = reducePR(pr)
+			}
+			prCh <- pr
+		}(num)
 	}
+	wg.Wait()
+	close(prCh)
+
 	return
 }
 
