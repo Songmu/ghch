@@ -68,7 +68,7 @@ func (cli *CLI) Run(argv []string) int {
 			}
 			fmt.Println(cli.OutStream, strings.Join(results, "\n"))
 		} else {
-			jsn, _ := json.MarshalIndent(r, "", "  ")
+			jsn, _ := json.MarshalIndent(chlog, "", "  ")
 			fmt.Fprintln(cli.OutStream, string(jsn))
 		}
 	} else {
