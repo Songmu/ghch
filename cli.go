@@ -15,6 +15,7 @@ type ghOpts struct {
 	To       string `short:"t" long:"to" description:"git commit revision range end to"`
 	Format   string `short:"F" long:"format" default:"json" description:"json or markdown"`
 	Verbose  bool   `short:"v" long:"verbose"`
+	Remote   string `          long:"remote" default:"origin"`
 	// Tmpl string
 }
 

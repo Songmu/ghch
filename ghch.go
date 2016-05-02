@@ -15,21 +15,21 @@ import (
 	"github.com/octokit/go-octokit/octokit"
 )
 
-type Ghch struct {
+type ghch struct {
 	RepoPath string
 	Remote   string
 	client   *octokit.Client
 }
 
-func New(repo string) *Ghch {
-	return &Ghch{
+func New(repo string) *ghch {
+	return &ghch{
 		RepoPath: repo,
 		// XXX authentication
 		client: octokit.NewClient(nil),
 	}
 }
 
-func (gh *Ghch) cmd(argv ...string) (string, error) {
+func (gh *ghch) cmd(argv ...string) (string, error) {
 	arg := []string{"-C", gh.RepoPath}
 	arg = append(arg, argv...)
 	cmd := exec.Command("git", arg...)
@@ -44,7 +44,7 @@ func (gh *Ghch) cmd(argv ...string) (string, error) {
 
 var verReg = regexp.MustCompile(`^v?[0-9]+(?:\.[0-9]+){0,2}$`)
 
-func (gh *Ghch) versions() []string {
+func (gh *ghch) versions() []string {
 	out, _ := gh.cmd("tag")
 	return parseVerions(out)
 }
@@ -67,7 +67,7 @@ func parseVerions(out string) []string {
 	return vers
 }
 
-func (gh *Ghch) getRemote() string {
+func (gh *ghch) getRemote() string {
 	if gh.Remote != "" {
 		return gh.Remote
 	}
@@ -76,7 +76,7 @@ func (gh *Ghch) getRemote() string {
 
 var repoURLReg = regexp.MustCompile(`([^/:]+)/([^/]+?)(?:\.git)?$`)
 
-func (gh *Ghch) ownerAndRepo() (owner, repo string) {
+func (gh *ghch) ownerAndRepo() (owner, repo string) {
 	out, _ := gh.cmd("remote", "-v")
 	remotes := strings.Split(out, "\n")
 	for _, r := range remotes {
@@ -90,7 +90,7 @@ func (gh *Ghch) ownerAndRepo() (owner, repo string) {
 	return
 }
 
-func (gh *Ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
+func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 	owner, repo := gh.ownerAndRepo()
 	nums := gh.mergedPRNums(from, to)
 	for _, num := range nums {
@@ -107,7 +107,7 @@ func (gh *Ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 
 var prMergeReg = regexp.MustCompile(`^[a-f0-9]{7} Merge pull request #([0-9]+) from`)
 
-func (gh *Ghch) mergedPRNums(from, to string) (nums []int) {
+func (gh *ghch) mergedPRNums(from, to string) (nums []int) {
 	if from == "" {
 		vers := gh.versions()
 		if len(vers) < 1 {
