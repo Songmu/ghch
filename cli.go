@@ -35,6 +35,7 @@ type CLI struct {
 }
 
 func (cli *CLI) Run(argv []string) int {
+	log.SetOutput(cli.ErrStream)
 	opts, err := parseArgs(argv)
 	if err != nil {
 		return exitCodeParseFlagError
