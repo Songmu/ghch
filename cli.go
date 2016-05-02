@@ -53,7 +53,7 @@ func (cli *CLI) Run(argv []string) int {
 	if opts.From == "" && opts.To == "" {
 		opts.From = gh.getLatestSemverTag()
 	}
-	r := gh.getResult(opts.From, opts.To)
+	r := gh.getsection(opts.From, opts.To)
 
 	if opts.Format == "markdown" {
 		str, err := r.toMkdn()
@@ -75,14 +75,14 @@ func parseArgs(args []string) (*ghOpts, error) {
 	return opts, err
 }
 
-func (gh *ghch) getResult(from, to string) result {
+func (gh *ghch) getsection(from, to string) section {
 	r := gh.mergedPRs(from, to)
 	t, err := gh.getChangedAt(to)
 	if err != nil {
 		log.Print(err)
 	}
 	owner, repo := gh.ownerAndRepo()
-	return result{
+	return section{
 		PullRequests: r,
 		FromRevision: from,
 		ToRevision:   to,
@@ -92,7 +92,7 @@ func (gh *ghch) getResult(from, to string) result {
 	}
 }
 
-type result struct {
+type section struct {
 	PullRequests []*octokit.PullRequest `json:"pull_requests"`
 	FromRevision string                 `json:"from_revision"`
 	ToRevision   string                 `json:"to_revision"`
@@ -117,7 +117,7 @@ func init() {
 	}
 }
 
-func (rs result) toMkdn() (string, error) {
+func (rs section) toMkdn() (string, error) {
 	var b bytes.Buffer
 	err := mdTmpl.Execute(&b, rs)
 	if err != nil {
