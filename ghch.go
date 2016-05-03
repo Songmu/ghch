@@ -113,12 +113,12 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 
 	go func() {
 		for {
-			select {
-			case pr := <- prCh:
-				prs = append(prs, pr)
-			case <-finish:
+			pr, ok := <- prCh
+			if !ok {
+				finish <- struct{}{}
 				return
 			}
+			prs = append(prs, pr)
 		}
 	}()
 
@@ -139,7 +139,8 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 		}(num)
 	}
 	wg.Wait()
-	finish <- struct{}{}
+	close(prCh)
+	<-finish
 
 	return
 }
