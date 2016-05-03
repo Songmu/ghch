@@ -15,15 +15,16 @@ import (
 )
 
 type ghOpts struct {
-	RepoPath string `short:"r" long:"repo" default:"." description:"git repository path"`
-	GitPath  string `short:"g" long:"git" default:"git" description:"git path"`
-	From     string `short:"f" long:"from" description:"git commit revision range start from"`
-	To       string `short:"t" long:"to" description:"git commit revision range end to"`
-	Token    string `          long:"token" description:"github token"`
-	Verbose  bool   `short:"v" long:"verbose"`
-	Remote   string `          long:"remote" default:"origin" description:"default remote name"`
-	Format   string `short:"F" long:"format" default:"json" description:"json or markdown"`
-	All      bool   `short:"A" long:"all" `
+	RepoPath    string `short:"r" long:"repo" default:"." description:"git repository path"`
+	GitPath     string `short:"g" long:"git" default:"git" description:"git path"`
+	From        string `short:"f" long:"from" description:"git commit revision range start from"`
+	To          string `short:"t" long:"to" description:"git commit revision range end to"`
+	Token       string `          long:"token" description:"github token"`
+	Verbose     bool   `short:"v" long:"verbose"`
+	Remote      string `          long:"remote" default:"origin" description:"default remote name"`
+	Format      string `short:"F" long:"format" default:"json" description:"json or markdown"`
+	All         bool   `short:"A" long:"all" description:"output all changes"`
+	NextVersion string `short:"N" long:"next-version"`
 	// Tmpl string
 }
 
@@ -79,7 +80,9 @@ func (cli *CLI) Run(argv []string) int {
 			opts.From = gh.getLatestSemverTag()
 		}
 		r := gh.getSection(opts.From, opts.To)
-
+		if r.ToRevision == "" && opts.NextVersion != "" {
+			r.ToRevision = opts.NextVersion
+		}
 		if opts.Format == "markdown" {
 			str, err := r.toMkdn()
 			if err != nil {
