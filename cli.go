@@ -51,6 +51,7 @@ func (cli *CLI) Run(argv []string) int {
 	gh := (&ghch{
 		remote:   opts.Remote,
 		repoPath: opts.RepoPath,
+		gitPath:  opts.GitPath,
 		verbose:  opts.Verbose,
 		token:    opts.Token,
 	}).initialize()

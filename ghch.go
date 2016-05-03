@@ -7,13 +7,12 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/Masterminds/semver"
+	"github.com/Songmu/gitsemvers"
 	"github.com/octokit/go-octokit/octokit"
 	"github.com/pkg/errors"
 	"github.com/tcnksm/go-gitconfig"
@@ -23,6 +22,7 @@ const version = "0.0.0"
 
 type ghch struct {
 	repoPath string
+	gitPath  string
 	remote   string
 	verbose  bool
 	token    string
@@ -50,10 +50,17 @@ func (gh *ghch) setToken() {
 	return
 }
 
+func (gh *ghch) gitProg() string {
+	if gh.gitPath != "" {
+		return gh.gitPath
+	}
+	return "git"
+}
+
 func (gh *ghch) cmd(argv ...string) (string, error) {
 	arg := []string{"-C", gh.repoPath}
 	arg = append(arg, argv...)
-	cmd := exec.Command("git", arg...)
+	cmd := exec.Command(gh.gitProg(), arg...)
 	cmd.Env = append(os.Environ(), "LANG=C")
 
 	var b bytes.Buffer
@@ -66,26 +73,11 @@ func (gh *ghch) cmd(argv ...string) (string, error) {
 var verReg = regexp.MustCompile(`^v?[0-9]+(?:\.[0-9]+){0,2}$`)
 
 func (gh *ghch) versions() []string {
-	out, _ := gh.cmd("tag")
-	return parseVerions(out)
-}
-
-func parseVerions(out string) []string {
-	rawTags := strings.Split(out, "\n")
-	var versions []*semver.Version
-	for _, tag := range rawTags {
-		t := strings.TrimSpace(tag)
-		if verReg.MatchString(t) {
-			v, _ := semver.NewVersion(t)
-			versions = append(versions, v)
-		}
+	sv := gitsemvers.Semvers{
+		RepoPath: gh.repoPath,
+		GitPath:  gh.gitPath,
 	}
-	sort.Sort(sort.Reverse(semver.Collection(versions)))
-	var vers = make([]string, len(versions))
-	for i, v := range versions {
-		vers[i] = v.Original()
-	}
-	return vers
+	return sv.VersionStrings()
 }
 
 func (gh *ghch) getRemote() string {
