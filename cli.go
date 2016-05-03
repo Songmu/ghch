@@ -73,7 +73,7 @@ func (cli *CLI) Run(argv []string) int {
 			for i, v := range chlog.Sections {
 				results[i], _ = v.toMkdn()
 			}
-			fmt.Fprintln(cli.OutStream, strings.Join(results, "\n"))
+			fmt.Fprintln(cli.OutStream, strings.Join(results, "\n\n"))
 		} else {
 			jsn, _ := json.MarshalIndent(chlog, "", "  ")
 			fmt.Fprintln(cli.OutStream, string(jsn))
@@ -139,8 +139,7 @@ type section struct {
 	Repo         string                 `json:"repo"`
 }
 
-var tmplStr = `{{ $ret := . }}
-## [{{.ToRevision}}](https://github.com/{{.Owner}}/{{.Repo}}/releases/tag/{{.ToRevision}}) ({{.ChangedAt.Format "2006-01-02"}})
+var tmplStr = `{{ $ret := . }}## [{{.ToRevision}}](https://github.com/{{.Owner}}/{{.Repo}}/releases/tag/{{.ToRevision}}) ({{.ChangedAt.Format "2006-01-02"}})
 {{range .PullRequests}}
 * {{.Title}} [#{{.Number}}](https://github.com/{{$ret.Owner}}/{{$ret.Repo}}/pull/{{.Number}}) ([{{.User.Login}}](https://github.com/{{.User.Login}})){{end}}`
 
