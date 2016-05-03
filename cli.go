@@ -21,7 +21,7 @@ type ghOpts struct {
 	To       string `short:"t" long:"to" description:"git commit revision range end to"`
 	Token    string `          long:"token" description:"github token"`
 	Verbose  bool   `short:"v" long:"verbose"`
-	Remote   string `          long:"remote" default:"origin"`
+	Remote   string `          long:"remote" default:"origin" description:"default remote name"`
 	Format   string `short:"F" long:"format" default:"json" description:"json or markdown"`
 	All      bool   `short:"A" long:"all" `
 	// Tmpl string
@@ -39,8 +39,11 @@ type CLI struct {
 
 func (cli *CLI) Run(argv []string) int {
 	log.SetOutput(cli.ErrStream)
-	opts, err := parseArgs(argv)
+	p, opts, err := parseArgs(argv)
 	if err != nil {
+		if ferr, ok := err.(*flags.Error); !ok || ferr.Type != flags.ErrHelp {
+			p.WriteHelp(cli.ErrStream)
+		}
 		return exitCodeParseFlagError
 	}
 
@@ -92,10 +95,12 @@ func (cli *CLI) Run(argv []string) int {
 	return exitCodeOK
 }
 
-func parseArgs(args []string) (*ghOpts, error) {
+func parseArgs(args []string) (*flags.Parser, *ghOpts, error) {
 	opts := &ghOpts{}
-	_, err := flags.ParseArgs(opts, args)
-	return opts, err
+	p := flags.NewParser(opts, flags.Default)
+	p.Usage = "[OPTIONS]\n\nVersion: " + version
+	_, err := p.ParseArgs(args)
+	return p, opts, err
 }
 
 func (gh *ghch) getSection(from, to string) section {
