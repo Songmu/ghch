@@ -188,12 +188,12 @@ func (gh *ghch) getChangedAt(rev string) (time.Time, error) {
 	}
 	out, err := gh.cmd("show", "-s", rev + "^{commit}", `--format=%ct`)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "failed to changed at from git revision. `git show` failed")
+		return time.Time{}, errors.Wrap(err, "failed to get changed at from git revision. `git show` failed")
 	}
 	out = strings.TrimSpace(out)
 	i, err := strconv.ParseInt(out, 10, 64)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "failed to changed at from git revision. ParseInt failed")
+		return time.Time{}, errors.Wrap(err, "failed to get changed at from git revision. ParseInt failed")
 	}
 	return time.Unix(i, 0), nil
 }
