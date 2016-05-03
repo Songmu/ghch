@@ -57,20 +57,23 @@ func (cli *CLI) Run(argv []string) int {
 
 	if opts.All {
 		chlog := changelog{}
+		vers := append(gh.versions(), "")
 		prevRev := ""
-		for _, rev := range gh.versions() {
+		for _, rev := range vers {
 			r := gh.getSection(rev, prevRev)
+			if prevRev == "" && opts.NextVersion != "" {
+				r.ToRevision = opts.NextVersion
+			}
 			chlog.Sections = append(chlog.Sections, r)
 			prevRev = rev
 		}
-		r := gh.getSection("", prevRev)
-		chlog.Sections = append(chlog.Sections, r)
+
 		if opts.Format == "markdown" {
 			results := make([]string, len(chlog.Sections))
 			for i, v := range chlog.Sections {
 				results[i], _ = v.toMkdn()
 			}
-			fmt.Println(cli.OutStream, strings.Join(results, "\n"))
+			fmt.Fprintln(cli.OutStream, strings.Join(results, "\n"))
 		} else {
 			jsn, _ := json.MarshalIndent(chlog, "", "  ")
 			fmt.Fprintln(cli.OutStream, string(jsn))
