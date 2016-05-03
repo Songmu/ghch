@@ -109,10 +109,16 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 
 	var wg sync.WaitGroup
 	prCh := make(chan *octokit.PullRequest)
+	finish := make(chan struct{})
 
 	go func() {
-		for pr := range prCh {
-			prs = append(prs, pr)
+		for {
+			select {
+			case pr := <- prCh:
+				prs = append(prs, pr)
+			case <-finish:
+				return
+			}
 		}
 	}()
 
@@ -133,7 +139,7 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 		}(num)
 	}
 	wg.Wait()
-	close(prCh)
+	finish <- struct{}{}
 
 	return
 }
@@ -150,9 +156,6 @@ var prMergeReg = regexp.MustCompile(`^[a-f0-9]{7} Merge pull request #([0-9]+) f
 
 func (gh *ghch) mergedPRNums(from, to string) (nums []int) {
 	if from == "" {
-		if to == "" {
-			return
-		}
 		from, _ = gh.cmd("rev-list", "--max-parents=0", "HEAD")
 		from = strings.TrimSpace(from)
 	}
