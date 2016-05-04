@@ -59,7 +59,7 @@ func (cli *CLI) Run(argv []string) int {
 	}).initialize()
 
 	if opts.All {
-		chlog := changelog{}
+		chlog := Changelog{}
 		vers := append(gh.versions(), "")
 		prevRev := ""
 		for _, rev := range vers {
@@ -112,14 +112,14 @@ func parseArgs(args []string) (*flags.Parser, *ghOpts, error) {
 	return p, opts, err
 }
 
-func (gh *ghch) getSection(from, to string) section {
+func (gh *ghch) getSection(from, to string) Section {
 	r := gh.mergedPRs(from, to)
 	t, err := gh.getChangedAt(to)
 	if err != nil {
 		log.Print(err)
 	}
 	owner, repo := gh.ownerAndRepo()
-	return section{
+	return Section{
 		PullRequests: r,
 		FromRevision: from,
 		ToRevision:   to,
@@ -129,11 +129,13 @@ func (gh *ghch) getSection(from, to string) section {
 	}
 }
 
-type changelog struct {
-	Sections []section `json:"sections"`
+// Changelog contains Sectionst
+type Changelog struct {
+	Sections []Section `json:"Sections"`
 }
 
-type section struct {
+// Section contains changes between two revisions
+type Section struct {
 	PullRequests []*octokit.PullRequest `json:"pull_requests"`
 	FromRevision string                 `json:"from_revision"`
 	ToRevision   string                 `json:"to_revision"`
@@ -158,7 +160,7 @@ func init() {
 	}
 }
 
-func (rs section) toMkdn() (string, error) {
+func (rs Section) toMkdn() (string, error) {
 	var b bytes.Buffer
 	err := mdTmpl.Execute(&b, rs)
 	if err != nil {
