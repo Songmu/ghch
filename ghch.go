@@ -18,7 +18,7 @@ import (
 	"github.com/tcnksm/go-gitconfig"
 )
 
-const version = "0.0.0"
+const version = "0.0.1"
 
 type ghch struct {
 	repoPath string
@@ -113,7 +113,7 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 
 	go func() {
 		for {
-			pr, ok := <- prCh
+			pr, ok := <-prCh
 			if !ok {
 				finish <- struct{}{}
 				return
