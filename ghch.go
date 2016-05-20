@@ -26,6 +26,7 @@ type ghch struct {
 	remote   string
 	verbose  bool
 	token    string
+	baseURL  string
 	client   *octokit.Client
 }
 
@@ -35,6 +36,14 @@ func (gh *ghch) initialize() *ghch {
 	if gh.token != "" {
 		auth = octokit.TokenAuth{AccessToken: gh.token}
 	}
+
+	gh.setBaseURL()
+
+	if gh.baseURL != "" {
+		gh.client = octokit.NewClientWith(gh.baseURL, "Octokit Go", auth, nil)
+		return gh
+	}
+
 	gh.client = octokit.NewClient(auth)
 	return gh
 }
@@ -47,6 +56,17 @@ func (gh *ghch) setToken() {
 		return
 	}
 	gh.token, _ = gitconfig.GithubToken()
+	return
+}
+
+func (gh *ghch) setBaseURL() {
+	if gh.baseURL != "" {
+		return
+	}
+	if gh.baseURL = os.Getenv("GITHUB_API"); gh.baseURL != "" {
+		return
+	}
+
 	return
 }
 
