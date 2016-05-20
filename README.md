@@ -37,6 +37,12 @@ Generate changelog from git history, tags and merged pull requests
     --remote=       default remote name (default: origin)
 ```
 
+## GitHub Enterprise
+
+You can use `ghch` for GitHub Enterprise. Change API endpoint via the enviromental variable.
+
+    $ export GITHUB_API=http://github.company.com/api/v3
+
 ## Examples
 
 ### display changes from last versioned tag
