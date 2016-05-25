@@ -28,7 +28,7 @@ type ghOpts struct {
 	Format      string `short:"F" long:"format" description:"json or markdown"`
 	All         bool   `short:"A" long:"all" description:"output all changes"`
 	NextVersion string `short:"N" long:"next-version"`
-	Write       bool   `short:"w" description:"write result to file"`
+	Write       bool   `short:"w" description:"write result to CHANGELOG.md (or specified file)"`
 	changelogMd string
 	// Tmpl string
 }

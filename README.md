@@ -35,6 +35,7 @@ Generate changelog from git history, tags and merged pull requests
 -g, --git=          git path (default: git)
     --token=        github token
     --remote=       default remote name (default: origin)
+-w                  write result to CHANGELOG.md (or specified file)
 ```
 
 ## GitHub Enterprise
@@ -101,6 +102,10 @@ You can use `ghch` for GitHub Enterprise. Change API endpoint via the enviroment
 
     % ghch --from v0.9.0 --to v0.9.1
     ...
+
+### edit CHANGELOG.md directly
+
+    % ghch --next-version=v0.0.2 -w
 
 ## Author
 
