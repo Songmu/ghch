@@ -16,4 +16,7 @@ lint: deps
 cover: deps
 	goveralls
 
-.PHONY: test deps lint cover
+release:
+	_tools/releng
+
+.PHONY: test deps lint cover release
