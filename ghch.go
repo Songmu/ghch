@@ -18,7 +18,7 @@ import (
 	"github.com/tcnksm/go-gitconfig"
 )
 
-const version = "0.0.1"
+const version = "0.0.2"
 
 type ghch struct {
 	repoPath string
