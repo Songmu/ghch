@@ -145,7 +145,7 @@ type Section struct {
 }
 
 var tmplStr = `{{$ret := . -}}
-## [{{.ToRevision}}](https://github.com/{{.Owner}}/{{.Repo}}/releases/tag/{{.ToRevision}}) ({{.ChangedAt.Format "2006-01-02"}})
+## [{{.ToRevision}}](https://github.com/{{.Owner}}/{{.Repo}}/compare/{{.FromRevision}}...{{.ToRevision}}) ({{.ChangedAt.Format "2006-01-02"}})
 {{range .PullRequests}}
 * {{.Title}} [#{{.Number}}](https://github.com/{{$ret.Owner}}/{{$ret.Repo}}/pull/{{.Number}}) ([{{.User.Login}}](https://github.com/{{.User.Login}}))
 {{- end}}`
