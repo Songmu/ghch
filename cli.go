@@ -1,11 +1,14 @@
 package ghch
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"text/template"
 	"time"
@@ -22,9 +25,11 @@ type ghOpts struct {
 	Token       string `          long:"token" description:"github token"`
 	Verbose     bool   `short:"v" long:"verbose"`
 	Remote      string `          long:"remote" default:"origin" description:"default remote name"`
-	Format      string `short:"F" long:"format" default:"json" description:"json or markdown"`
+	Format      string `short:"F" long:"format" description:"json or markdown"`
 	All         bool   `short:"A" long:"all" description:"output all changes"`
 	NextVersion string `short:"N" long:"next-version"`
+	Write       bool   `short:"w" description:"write result to file"`
+	changelogMd string
 	// Tmpl string
 }
 
@@ -76,7 +81,17 @@ func (cli *CLI) Run(argv []string) int {
 			for i, v := range chlog.Sections {
 				results[i], _ = v.toMkdn()
 			}
-			fmt.Fprintln(cli.OutStream, strings.Join(results, "\n\n"))
+
+			if opts.Write {
+				content := "# Changelog\n\n" + strings.Join(results, "\n\n")
+				err := ioutil.WriteFile(opts.changelogMd, []byte(content), 0644)
+				if err != nil {
+					log.Print(err)
+					return exitCodeErr
+				}
+			} else {
+				fmt.Fprintln(cli.OutStream, strings.Join(results, "\n\n"))
+			}
 		} else {
 			jsn, _ := json.MarshalIndent(chlog, "", "  ")
 			fmt.Fprintln(cli.OutStream, string(jsn))
@@ -93,6 +108,25 @@ func (cli *CLI) Run(argv []string) int {
 			str, err := r.toMkdn()
 			if err != nil {
 				log.Print(err)
+				return exitCodeErr
+			}
+			if opts.Write {
+				content := ""
+				if exists(opts.changelogMd) {
+					byt, err := ioutil.ReadFile(opts.changelogMd)
+					if err != nil {
+						log.Print(err)
+						return exitCodeErr
+					}
+					content = insertNewChangelog(byt, str)
+				} else {
+					content = "# Changelog\n\n" + str
+				}
+				err = ioutil.WriteFile(opts.changelogMd, []byte(content), 0644)
+				if err != nil {
+					log.Print(err)
+					return exitCodeErr
+				}
 			} else {
 				fmt.Fprintln(cli.OutStream, str)
 			}
@@ -104,11 +138,43 @@ func (cli *CLI) Run(argv []string) int {
 	return exitCodeOK
 }
 
+func insertNewChangelog(orig []byte, section string) string {
+	var bf bytes.Buffer
+	lineSnr := bufio.NewScanner(bytes.NewReader(orig))
+	inserted := false
+	for lineSnr.Scan() {
+		line := lineSnr.Text()
+		if !inserted && strings.HasPrefix(line, "## ") {
+			bf.WriteString(section)
+			bf.WriteString("\n\n")
+			inserted = true
+		}
+		bf.WriteString(line)
+		bf.WriteString("\n")
+	}
+	if !inserted {
+		bf.WriteString(section)
+	}
+	return bf.String()
+}
+
+func exists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
+}
+
 func parseArgs(args []string) (*flags.Parser, *ghOpts, error) {
 	opts := &ghOpts{}
 	p := flags.NewParser(opts, flags.Default)
 	p.Usage = "[OPTIONS]\n\nVersion: " + version
-	_, err := p.ParseArgs(args)
+	rest, err := p.ParseArgs(args)
+	if opts.Write {
+		opts.Format = "markdown"
+		opts.changelogMd = "CHANGELOG.md"
+		if len(rest) > 0 {
+			opts.changelogMd = rest[0]
+		}
+	}
 	return p, opts, err
 }
 
