@@ -3,8 +3,7 @@ set -e
 
 gobump show
 
-printf "input next version: "
-read next_version
+read -p "input next version: " next_version
 
 gobump set $next_version -w
 ghch -w -N v$next_version
