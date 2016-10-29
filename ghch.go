@@ -126,7 +126,8 @@ func (gh *ghch) ownerAndRepo() (owner, repo string) {
 func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 	owner, repo := gh.ownerAndRepo()
 	nums := gh.mergedPRNums(from, to)
-	prs = make([]*octokit.PullRequest, len(nums))
+	prs = make([]*octokit.PullRequest, 0, len(nums))
+	prsWithNil := make([]*octokit.PullRequest, len(nums))
 
 	var wg sync.WaitGroup
 
@@ -143,10 +144,15 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 			if !gh.verbose {
 				pr = reducePR(pr)
 			}
-			prs[i] = pr
+			prsWithNil[i] = pr
 		}(i, num)
 	}
 	wg.Wait()
+	for _, pr := range prsWithNil {
+		if pr != nil {
+			prs = append(prs, pr)
+		}
+	}
 	return
 }
 
