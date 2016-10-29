@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.3](https://github.com/Songmu/ghch/compare/v0.0.2...v0.0.3) (2016-10-29)
+
+* fix order of merged pull-request [#6](https://github.com/Songmu/ghch/pull/6) ([haya14busa](https://github.com/haya14busa))
+
 ## [v0.0.2](https://github.com/Songmu/ghch/compare/v0.0.1...v0.0.2) (2016-05-26)
 
 * add GitHub Enterprise support [#2](https://github.com/Songmu/ghch/pull/2) ([griffin-stewie](https://github.com/griffin-stewie))
