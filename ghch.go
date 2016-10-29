@@ -126,25 +126,13 @@ func (gh *ghch) ownerAndRepo() (owner, repo string) {
 func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 	owner, repo := gh.ownerAndRepo()
 	nums := gh.mergedPRNums(from, to)
+	prs = make([]*octokit.PullRequest, len(nums))
 
 	var wg sync.WaitGroup
-	prCh := make(chan *octokit.PullRequest)
-	finish := make(chan struct{})
 
-	go func() {
-		for {
-			pr, ok := <-prCh
-			if !ok {
-				finish <- struct{}{}
-				return
-			}
-			prs = append(prs, pr)
-		}
-	}()
-
-	for _, num := range nums {
+	for i, num := range nums {
 		wg.Add(1)
-		go func(num int) {
+		go func(i, num int) {
 			defer wg.Done()
 			url, _ := octokit.PullRequestsURL.Expand(octokit.M{"owner": owner, "repo": repo, "number": num})
 			pr, r := gh.client.PullRequests(url).One()
@@ -155,13 +143,10 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 			if !gh.verbose {
 				pr = reducePR(pr)
 			}
-			prCh <- pr
-		}(num)
+			prs[i] = pr
+		}(i, num)
 	}
 	wg.Wait()
-	close(prCh)
-	<-finish
-
 	return
 }
 
