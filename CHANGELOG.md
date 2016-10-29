@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.4](https://github.com/Songmu/ghch/compare/v0.0.3...v0.0.4) (2016-10-29)
+
+* fix nil handling of octokit.PullRequest [#7](https://github.com/Songmu/ghch/pull/7) ([haya14busa](https://github.com/haya14busa))
+
 ## [v0.0.3](https://github.com/Songmu/ghch/compare/v0.0.2...v0.0.3) (2016-10-29)
 
 * fix order of merged pull-request [#6](https://github.com/Songmu/ghch/pull/6) ([haya14busa](https://github.com/haya14busa))
