@@ -164,7 +164,7 @@ func (gh *ghch) getLatestSemverTag() string {
 	return vers[0]
 }
 
-var prMergeReg = regexp.MustCompile(`^[a-f0-9]{7} Merge pull request #([0-9]+) from`)
+var prMergeReg = regexp.MustCompile(`#([0-9]+)`)
 
 func (gh *ghch) mergedPRNums(from, to string) (nums []int) {
 	if from == "" {
@@ -173,7 +173,7 @@ func (gh *ghch) mergedPRNums(from, to string) (nums []int) {
 	}
 
 	revisionRange := fmt.Sprintf("%s..%s", from, to)
-	out, err := gh.cmd("log", revisionRange, "--merges", "--oneline")
+	out, err := gh.cmd("log", revisionRange, "--pretty=%s")
 	if err != nil {
 		return
 	}
