@@ -37,11 +37,23 @@ Generate changelog from git history, tags and merged pull requests
     --remote=       default remote name (default: origin)
 ```
 
+## GITHUB Token
+
+When github's api token is required in private repository etc., it is used in the following order of priority.
+
+- command line option `--token`
+- enviroment variable `GITHUB_TOKEN`
+- `git config github.token`
+
 ## GitHub Enterprise
 
 You can use `ghch` for GitHub Enterprise. Change API endpoint via the enviromental variable.
 
     $ export GITHUB_API=http://github.company.com/api/v3
+
+## Requirements
+
+git 1.8.5 or newer is required.
 
 ## Examples
 
