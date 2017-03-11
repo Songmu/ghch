@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
@@ -138,7 +139,12 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 			num := prlog.num
 			url, _ := octokit.PullRequestsURL.Expand(octokit.M{"owner": owner, "repo": repo, "number": num})
 			pr, r := gh.client.PullRequests(url).One()
-			if r.HasError() {
+			if r.Err != nil {
+				if rerr, ok := r.Err.(*octokit.ResponseError); ok {
+					if rerr.Response != nil && rerr.Response.StatusCode == http.StatusNotFound {
+						return
+					}
+				}
 				log.Print(r.Err)
 				return
 			}
