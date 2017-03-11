@@ -29,6 +29,9 @@ func reduceUser(u octokit.User) octokit.User {
 }
 
 func reduceRepo(r *octokit.Repository) *octokit.Repository {
+	if r == nil {
+		return nil
+	}
 	return &octokit.Repository{
 		Owner:    reduceUser(r.Owner),
 		Name:     r.Name,
