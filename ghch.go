@@ -136,8 +136,7 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 		wg.Add(1)
 		go func(i int, prlog *mergedPRLog) {
 			defer wg.Done()
-			num := prlog.num
-			url, _ := octokit.PullRequestsURL.Expand(octokit.M{"owner": owner, "repo": repo, "number": num})
+			url, _ := octokit.PullRequestsURL.Expand(octokit.M{"owner": owner, "repo": repo, "number": prlog.num})
 			pr, r := gh.client.PullRequests(url).One()
 			if r.Err != nil {
 				if rerr, ok := r.Err.(*octokit.ResponseError); ok {
@@ -146,6 +145,10 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 					}
 				}
 				log.Print(r.Err)
+				return
+			}
+			// replace repoowner:branch-name to repo-owner/branch-name
+			if strings.Replace(pr.Head.Label, ":", "/", 1) != prlog.branch {
 				return
 			}
 			if !gh.verbose {
