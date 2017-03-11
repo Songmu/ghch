@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestParsePRNums(t *testing.T) {
+func TestParsePRLogs(t *testing.T) {
 
 	input := `6191693 Merge pull request #225 from mackerelio/fix-test-for-invaild-toml
 dbb1d50 Merge pull request #224 from mackerelio/retry-retire
@@ -42,41 +42,41 @@ ca345ea Merge pull request #195 from mackerelio/introduce-motemen-go-cli
 4a6d83c Merge pull request #192 from mackerelio/deb_init_d_stop_retval
 5b0a536 Merge pull request #191 from mackerelio/gofmt-on-travis
 `
-	expect := []int{
-		225,
-		224,
-		223,
-		222,
-		221,
-		217,
-		216,
-		215,
-		214,
-		213,
-		211,
-		210,
-		208,
-		207,
-		209,
-		205,
-		202,
-		161,
-		206,
-		174,
-		203,
-		199,
-		201,
-		200,
-		197,
-		198,
-		196,
-		195,
-		194,
-		193,
-		192,
-		191,
+	expect := []*mergedPRLog{
+		{num: 225, branch: "mackerelio/fix-test-for-invaild-toml"},
+		{num: 224, branch: "mackerelio/retry-retire"},
+		{num: 223, branch: "mackerelio/remove_vet"},
+		{num: 222, branch: "mackerelio/fix-comments"},
+		{num: 221, branch: "yukiyan/fix-typo"},
+		{num: 217, branch: "mackerelio/remove-usr-local-bin-again"},
+		{num: 216, branch: "mackerelio/bump-version-0.30.2"},
+		{num: 215, branch: "mackerelio/revert-9e0c8ab1"},
+		{num: 214, branch: "mackerelio/bump-version-0.30.1"},
+		{num: 213, branch: "mackerelio/workaround-amd64"},
+		{num: 211, branch: "mackerelio/usr-bin"},
+		{num: 210, branch: "mackerelio/bump-version-0.30.0"},
+		{num: 208, branch: "mackerelio/refactor-net-interface"},
+		{num: 207, branch: "mackerelio/subcommand-init"},
+		{num: 209, branch: "mackerelio/remove-cpu-flags"},
+		{num: 205, branch: "mackerelio/interface-ips"},
+		{num: 202, branch: "mackerelio/remove-deprecated-sensu"},
+		{num: 161, branch: "mackerelio/remove-uptime"},
+		{num: 206, branch: "mackerelio/bump-version-0.29.2"},
+		{num: 174, branch: "mackerelio/travis-docker"},
+		{num: 203, branch: "mackerelio/alternative-build"},
+		{num: 199, branch: "mackerelio/fix-deb"},
+		{num: 201, branch: "mackerelio/bump-version-0.29.1"},
+		{num: 200, branch: "mackerelio/bump-version-0.29.0"},
+		{num: 197, branch: "hanazuki/check-timeouts"},
+		{num: 198, branch: "mackerelio/dont-ignore-logging-level_string"},
+		{num: 196, branch: "mackerelio/refactor-around-start"},
+		{num: 195, branch: "mackerelio/introduce-motemen-go-cli"},
+		{num: 194, branch: "mackerelio/remove-deprecated"},
+		{num: 193, branch: "mackerelio/bump-version-0.28.1"},
+		{num: 192, branch: "mackerelio/deb_init_d_stop_retval"},
+		{num: 191, branch: "mackerelio/gofmt-on-travis"},
 	}
-	if !reflect.DeepEqual(parseMergedPRNums(input), expect) {
+	if !reflect.DeepEqual(parseMergedPRLogs(input), expect) {
 		t.Errorf("somthing went wrong")
 	}
 }
