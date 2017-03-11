@@ -125,16 +125,17 @@ func (gh *ghch) ownerAndRepo() (owner, repo string) {
 
 func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 	owner, repo := gh.ownerAndRepo()
-	nums := gh.mergedPRNums(from, to)
-	prs = make([]*octokit.PullRequest, 0, len(nums))
-	prsWithNil := make([]*octokit.PullRequest, len(nums))
+	prlogs := gh.mergedPRLogs(from, to)
+	prs = make([]*octokit.PullRequest, 0, len(prlogs))
+	prsWithNil := make([]*octokit.PullRequest, len(prlogs))
 
 	var wg sync.WaitGroup
 
-	for i, num := range nums {
+	for i, prlog := range prlogs {
 		wg.Add(1)
-		go func(i, num int) {
+		go func(i int, prlog *mergedPRLog) {
 			defer wg.Done()
+			num := prlog.num
 			url, _ := octokit.PullRequestsURL.Expand(octokit.M{"owner": owner, "repo": repo, "number": num})
 			pr, r := gh.client.PullRequests(url).One()
 			if r.HasError() {
@@ -145,7 +146,7 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 				pr = reducePR(pr)
 			}
 			prsWithNil[i] = pr
-		}(i, num)
+		}(i, prlog)
 	}
 	wg.Wait()
 	for _, pr := range prsWithNil {
@@ -164,9 +165,12 @@ func (gh *ghch) getLatestSemverTag() string {
 	return vers[0]
 }
 
-var prMergeReg = regexp.MustCompile(`^[a-f0-9]{7} Merge pull request #([0-9]+) from`)
+type mergedPRLog struct {
+	num    int
+	branch string
+}
 
-func (gh *ghch) mergedPRNums(from, to string) (nums []int) {
+func (gh *ghch) mergedPRLogs(from, to string) (nums []*mergedPRLog) {
 	if from == "" {
 		from, _ = gh.cmd("rev-list", "--max-parents=0", "HEAD")
 		from = strings.TrimSpace(from)
@@ -177,15 +181,20 @@ func (gh *ghch) mergedPRNums(from, to string) (nums []int) {
 	if err != nil {
 		return
 	}
-	return parseMergedPRNums(out)
+	return parseMergedPRLogs(out)
 }
 
-func parseMergedPRNums(out string) (nums []int) {
+var prMergeReg = regexp.MustCompile(`^[a-f0-9]{7} Merge pull request #([0-9]+) from (\S+)`)
+
+func parseMergedPRLogs(out string) (prs []*mergedPRLog) {
 	lines := strings.Split(out, "\n")
 	for _, line := range lines {
-		if matches := prMergeReg.FindStringSubmatch(line); len(matches) > 1 {
+		if matches := prMergeReg.FindStringSubmatch(line); len(matches) > 2 {
 			i, _ := strconv.Atoi(matches[1])
-			nums = append(nums, i)
+			prs = append(prs, &mergedPRLog{
+				num:    i,
+				branch: matches[2],
+			})
 		}
 	}
 	return
