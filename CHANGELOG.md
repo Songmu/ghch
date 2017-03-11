@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.1.0](https://github.com/Songmu/ghch/compare/v0.0.4...v0.1.0) (2017-03-11)
+
+* check the matching of number of pull requests and the branch name [#8](https://github.com/Songmu/ghch/pull/8) ([Songmu](https://github.com/Songmu))
+
 ## [v0.0.4](https://github.com/Songmu/ghch/compare/v0.0.3...v0.0.4) (2016-10-29)
 
 * fix nil handling of octokit.PullRequest [#7](https://github.com/Songmu/ghch/pull/7) ([haya14busa](https://github.com/haya14busa))
