@@ -1,22 +1,33 @@
-test: deps
+ifdef update
+  u=-u
+endif
+
+test: test-deps
 	go test
 
 deps:
-	go get -d -v -t ./...
-	go get github.com/golang/lint/golint
-	go get github.com/mattn/goveralls
+	go get ${u} -d -v ./...
 
-LINT_RET = .golint.txt
-lint: deps
+test-deps:
+	go get ${u} -d -t -v ./...
+
+devel-deps: test-deps
+	go get ${u} github.com/golang/lint/golint
+	go get ${u} github.com/mattn/goveralls
+	go get ${u} github.com/motemen/gobump
+	go get ${u} github.com/laher/goxc
+
+lint: devel-deps
 	go vet ./...
-	rm -f $(LINT_RET)
-	golint ./... | tee $(LINT_RET)
-	test ! -s $(LINT_RET)
+	golint -set_exit_status ./...
 
-cover: deps
+cover: devel-deps
 	goveralls
+
+crossbuild: devel-deps
+	goxc -pv=v$(shell gobump show -r) -d=./dist -arch=amd64 -os=linux,darwin,windows -tasks=clean-destination,xc,archive,rmbin
 
 release:
 	_tools/releng
 
-.PHONY: test deps lint cover release
+.PHONY: test deps test-deps devel-deps lint cover crossbuild release
