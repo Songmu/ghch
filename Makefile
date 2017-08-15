@@ -17,7 +17,7 @@ devel-deps: test-deps
 	go get ${u} github.com/motemen/gobump
 	go get ${u} github.com/laher/goxc
 
-lint: test-deps
+lint: devel-deps
 	go vet ./...
 	golint -set_exit_status ./...
 
