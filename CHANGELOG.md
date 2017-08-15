@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.1.1](https://github.com/Songmu/ghch/compare/v0.1.0...v0.1.1) (2017-08-15)
+
+* build artifacts on travis [#10](https://github.com/Songmu/ghch/pull/10) ([Songmu](https://github.com/Songmu))
+
 ## [v0.1.0](https://github.com/Songmu/ghch/compare/v0.0.4...v0.1.0) (2017-03-11)
 
 * check the matching of number of pull requests and the branch name [#8](https://github.com/Songmu/ghch/pull/8) ([Songmu](https://github.com/Songmu))
