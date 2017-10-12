@@ -15,7 +15,7 @@ devel-deps: deps
 	go get ${u} github.com/laher/goxc
 	go get ${u} github.com/Songmu/ghch
 
-test: test-deps
+test: deps
 	go test
 
 lint: devel-deps
