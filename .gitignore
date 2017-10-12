@@ -3,3 +3,4 @@
 !.travis.yml
 !.goxc.json
 dist/
+vendor/
