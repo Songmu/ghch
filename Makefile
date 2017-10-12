@@ -19,8 +19,8 @@ test: test-deps
 	go test
 
 lint: devel-deps
-	go vet ./...
-	golint -set_exit_status ./...
+	go vet
+	golint -set_exit_status
 
 cover: devel-deps
 	goveralls
