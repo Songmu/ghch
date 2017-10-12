@@ -1,3 +1,5 @@
+CURRENT_REVISION = $(shell git rev-parse --short HEAD)
+BUILD_LDFLAGS = "-X github.com/Songmu/ghch.revision=$(CURRENT_REVISION)"
 ifdef update
   u=-u
 endif
@@ -24,8 +26,13 @@ lint: devel-deps
 cover: devel-deps
 	goveralls
 
+build: deps
+	go build -ldflags=$(BUILD_LDFLAGS) ./cmd/ghch
+
 crossbuild: devel-deps
-	goxc -pv=v$(shell gobump show -r) -d=./dist -arch=amd64 -os=linux,darwin,windows -tasks=clean-destination,xc,archive,rmbin
+	goxc -pv=v$(shell gobump show -r) -build-ldflags=$(BUILD_LDFLAGS) \
+	  -d=./dist -arch=amd64 -os=linux,darwin,windows \
+	  -tasks=clean-destination,xc,archive,rmbin
 
 release:
 	_tools/releng
