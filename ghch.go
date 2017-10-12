@@ -193,7 +193,7 @@ func (gh *ghch) mergedPRLogs(from, to string) (nums []*mergedPRLog) {
 	return parseMergedPRLogs(out)
 }
 
-var prMergeReg = regexp.MustCompile(`^[a-f0-9]{7} Merge pull request #([0-9]+) from (\S+)`)
+var prMergeReg = regexp.MustCompile(`^[a-f0-9]+ Merge pull request #([0-9]+) from (\S+)`)
 
 func parseMergedPRLogs(out string) (prs []*mergedPRLog) {
 	lines := strings.Split(out, "\n")
