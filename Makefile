@@ -4,20 +4,19 @@ ifdef update
   u=-u
 endif
 
-test: test-deps
-	go test
-
 deps:
-	go get ${u} -d -v ./...
+	go get ${u} github.com/golang/dep/cmd/dep
+	dep ensure
 
-test-deps:
-	go get ${u} -d -t -v ./...
-
-devel-deps: test-deps
+devel-deps: deps
 	go get ${u} github.com/golang/lint/golint
 	go get ${u} github.com/mattn/goveralls
 	go get ${u} github.com/motemen/gobump
 	go get ${u} github.com/laher/goxc
+	go get ${u} github.com/Songmu/ghch
+
+test: test-deps
+	go test
 
 lint: devel-deps
 	go vet ./...
@@ -37,4 +36,4 @@ crossbuild: devel-deps
 release:
 	_tools/releng
 
-.PHONY: test deps test-deps devel-deps lint cover crossbuild release
+.PHONY: test deps devel-deps lint cover crossbuild release
