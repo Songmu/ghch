@@ -166,7 +166,7 @@ func exists(filename string) bool {
 func parseArgs(args []string) (*flags.Parser, *ghOpts, error) {
 	opts := &ghOpts{}
 	p := flags.NewParser(opts, flags.Default)
-	p.Usage = "[OPTIONS]\n\nVersion: " + version
+	p.Usage = fmt.Sprintf("[OPTIONS]\n\nVersion: %s (rev: %s)", version, revision)
 	rest, err := p.ParseArgs(args)
 	if opts.Write {
 		opts.Format = "markdown"
