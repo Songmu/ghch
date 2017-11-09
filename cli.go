@@ -68,7 +68,11 @@ func (cli *CLI) Run(argv []string) int {
 		vers := append(gh.versions(), "")
 		prevRev := ""
 		for _, rev := range vers {
-			r := gh.getSection(rev, prevRev)
+			r, err := gh.getSection(rev, prevRev)
+			if (err != nil) {
+				log.Print(err)
+				return exitCodeErr
+			}
 			if prevRev == "" && opts.NextVersion != "" {
 				r.ToRevision = opts.NextVersion
 			}
@@ -100,7 +104,11 @@ func (cli *CLI) Run(argv []string) int {
 		if opts.From == "" && opts.To == "" {
 			opts.From = gh.getLatestSemverTag()
 		}
-		r := gh.getSection(opts.From, opts.To)
+		r, err := gh.getSection(opts.From, opts.To)
+		if err != nil {
+			log.Print(err)
+			return exitCodeErr
+		}
 		if r.ToRevision == "" && opts.NextVersion != "" {
 			r.ToRevision = opts.NextVersion
 		}
@@ -178,11 +186,14 @@ func parseArgs(args []string) (*flags.Parser, *ghOpts, error) {
 	return p, opts, err
 }
 
-func (gh *ghch) getSection(from, to string) Section {
-	r := gh.mergedPRs(from, to)
+func (gh *ghch) getSection(from, to string) (Section, error) {
+	r, err := gh.mergedPRs(from, to)
+	if err != nil {
+		return Section{}, err
+	}
 	t, err := gh.getChangedAt(to)
 	if err != nil {
-		log.Print(err)
+		return Section{}, err
 	}
 	owner, repo := gh.ownerAndRepo()
 	return Section{
@@ -192,7 +203,7 @@ func (gh *ghch) getSection(from, to string) Section {
 		ChangedAt:    t,
 		Owner:        owner,
 		Repo:         repo,
-	}
+	}, nil
 }
 
 // Changelog contains Sectionst
