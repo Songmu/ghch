@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.1.3](https://github.com/Songmu/ghch/compare/v0.1.2...v0.1.3) (2017-11-09)
+
+* fail if failed [#14](https://github.com/Songmu/ghch/pull/14) ([mechairoi](https://github.com/mechairoi))
+
 ## [v0.1.2](https://github.com/Songmu/ghch/compare/v0.1.1...v0.1.2) (2017-10-12)
 
 * introduce dep [#13](https://github.com/Songmu/ghch/pull/13) ([Songmu](https://github.com/Songmu))
