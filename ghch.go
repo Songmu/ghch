@@ -122,11 +122,15 @@ func (gh *ghch) ownerAndRepo() (owner, repo string) {
 	return
 }
 
-func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
+func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest, err error) {
 	owner, repo := gh.ownerAndRepo()
-	prlogs := gh.mergedPRLogs(from, to)
+	prlogs, err := gh.mergedPRLogs(from, to)
+	if (err != nil) {
+		return
+	}
 	prs = make([]*octokit.PullRequest, 0, len(prlogs))
 	prsWithNil := make([]*octokit.PullRequest, len(prlogs))
+	errsWithNil := make([]error, len(prlogs))
 
 	var wg sync.WaitGroup
 
@@ -142,6 +146,7 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 						return
 					}
 				}
+				errsWithNil[i] = r.Err
 				log.Print(r.Err)
 				return
 			}
@@ -161,6 +166,11 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest) {
 			prs = append(prs, pr)
 		}
 	}
+	for _, e := range errsWithNil {
+		if e != nil {
+			err = e
+		}
+	}
 	return
 }
 
@@ -177,7 +187,7 @@ type mergedPRLog struct {
 	branch string
 }
 
-func (gh *ghch) mergedPRLogs(from, to string) (nums []*mergedPRLog) {
+func (gh *ghch) mergedPRLogs(from, to string) (nums []*mergedPRLog, err error) {
 	if from == "" {
 		from, _ = gh.cmd("rev-list", "--max-parents=0", "HEAD")
 		from = strings.TrimSpace(from)
@@ -186,9 +196,9 @@ func (gh *ghch) mergedPRLogs(from, to string) (nums []*mergedPRLog) {
 	revisionRange := fmt.Sprintf("%s..%s", from, to)
 	out, err := gh.cmd("log", revisionRange, "--merges", "--oneline")
 	if err != nil {
-		return
+		return []*mergedPRLog{}, err
 	}
-	return parseMergedPRLogs(out)
+	return parseMergedPRLogs(out), nil
 }
 
 var prMergeReg = regexp.MustCompile(`^[a-f0-9]+ Merge pull request #([0-9]+) from (\S+)`)
