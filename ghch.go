@@ -125,7 +125,7 @@ func (gh *ghch) ownerAndRepo() (owner, repo string) {
 func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest, err error) {
 	owner, repo := gh.ownerAndRepo()
 	prlogs, err := gh.mergedPRLogs(from, to)
-	if (err != nil) {
+	if err != nil {
 		return
 	}
 	prs = make([]*octokit.PullRequest, 0, len(prlogs))
@@ -188,11 +188,6 @@ type mergedPRLog struct {
 }
 
 func (gh *ghch) mergedPRLogs(from, to string) (nums []*mergedPRLog, err error) {
-	if from == "" {
-		from, _ = gh.cmd("rev-list", "--max-parents=0", "HEAD")
-		from = strings.TrimSpace(from)
-	}
-
 	revisionRange := fmt.Sprintf("%s..%s", from, to)
 	out, err := gh.cmd("log", revisionRange, "--merges", "--oneline")
 	if err != nil {
