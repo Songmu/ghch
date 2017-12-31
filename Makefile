@@ -12,7 +12,7 @@ devel-deps: deps
 	go get ${u} github.com/golang/lint/golint
 	go get ${u} github.com/mattn/goveralls
 	go get ${u} github.com/motemen/gobump
-	go get ${u} github.com/laher/goxc
+	go get ${u} github.com/Songmu/goxz/cmd/goxz
 	go get ${u} github.com/Songmu/ghch
 
 test: deps
@@ -29,9 +29,8 @@ build: deps
 	go build -ldflags=$(BUILD_LDFLAGS) ./cmd/ghch
 
 crossbuild: devel-deps
-	goxc -pv=v$(shell gobump show -r) -build-ldflags=$(BUILD_LDFLAGS) \
-	  -d=./dist -arch=amd64 -os=linux,darwin,windows \
-	  -tasks=clean-destination,xc,archive,rmbin
+	goxz -pv=v$(shell gobump show -r) -build-ldflags=$(BUILD_LDFLAGS) \
+	  -d=./dist ./cmd/ghch
 
 release:
 	_tools/releng
