@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.2.0](https://github.com/Songmu/ghch/compare/v0.1.3...v0.2.0) (2018-01-01)
+
+* introduce goxz for releasing and drop goxc dependency [#17](https://github.com/Songmu/ghch/pull/17) ([Songmu](https://github.com/Songmu))
+* add --latest option for output changes between latest two semantic versioned tags [#16](https://github.com/Songmu/ghch/pull/16) ([Songmu](https://github.com/Songmu))
+* fill oldest commit hash when from ref is empty [#15](https://github.com/Songmu/ghch/pull/15) ([Songmu](https://github.com/Songmu))
+
 ## [v0.1.3](https://github.com/Songmu/ghch/compare/v0.1.2...v0.1.3) (2017-11-09)
 
 * fail if failed [#14](https://github.com/Songmu/ghch/pull/14) ([mechairoi](https://github.com/mechairoi))
