@@ -22,6 +22,7 @@ type ghOpts struct {
 	GitPath     string `short:"g" long:"git" default:"git" description:"git path"`
 	From        string `short:"f" long:"from" description:"git commit revision range start from"`
 	To          string `short:"t" long:"to" description:"git commit revision range end to"`
+	Latest      bool   `          long:"latest" description:"output changes between latest two semantic versioned tags"`
 	Token       string `          long:"token" description:"github token"`
 	Verbose     bool   `short:"v" long:"verbose"`
 	Remote      string `          long:"remote" default:"origin" description:"default remote name"`
@@ -101,7 +102,15 @@ func (cli *CLI) Run(argv []string) int {
 			fmt.Fprintln(cli.OutStream, string(jsn))
 		}
 	} else {
-		if opts.From == "" && opts.To == "" {
+		if opts.Latest {
+			vers := gh.versions()
+			if len(vers) > 0 {
+				opts.To = vers[0]
+			}
+			if opts.From == "" && len(vers) > 1 {
+				opts.From = vers[1]
+			}
+		} else if opts.From == "" && opts.To == "" {
 			opts.From = gh.getLatestSemverTag()
 		}
 		r, err := gh.getSection(opts.From, opts.To)
