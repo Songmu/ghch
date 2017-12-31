@@ -69,7 +69,7 @@ func (cli *CLI) Run(argv []string) int {
 		prevRev := ""
 		for _, rev := range vers {
 			r, err := gh.getSection(rev, prevRev)
-			if (err != nil) {
+			if err != nil {
 				log.Print(err)
 				return exitCodeErr
 			}
@@ -187,6 +187,13 @@ func parseArgs(args []string) (*flags.Parser, *ghOpts, error) {
 }
 
 func (gh *ghch) getSection(from, to string) (Section, error) {
+	if from == "" {
+		from, _ = gh.cmd("rev-list", "--max-parents=0", "HEAD")
+		from = strings.TrimSpace(from)
+		if len(from) > 12 {
+			from = from[:12]
+		}
+	}
 	r, err := gh.mergedPRs(from, to)
 	if err != nil {
 		return Section{}, err
