@@ -28,6 +28,7 @@ Generate changelog from git history, tags and merged pull requests
 -r, --repo=         git repository path (default: .)
 -f, --from=         git commit revision range start from
 -t, --to=           git commit revision range end to
+    --latest        output changes between latest two semantic versioned tags
 -v, --verbose
 -F, --format=       json or markdown (default: json)
 -A, --all           output all changes
@@ -96,13 +97,22 @@ git 1.8.5 or newer is required.
 
     % ghch --format=markdown --next-version=v0.30.3
     ## [v0.30.3](https://github.com/mackerelio/mackerel-agent/releases/tag/v0.30.3) (2016-04-27)
-
+    
     * retry retirement when api request failed [#224](https://github.com/mackerelio/mackerel-agent/pull/224) ([Songmu](https://github.com/Songmu))
     * Fix comments [#222](https://github.com/mackerelio/mackerel-agent/pull/222) ([stefafafan](https://github.com/stefafafan))
     * Remove go get cmd/vet [#223](https://github.com/mackerelio/mackerel-agent/pull/223) ([itchyny](https://github.com/itchyny))
     * [nit] [plugin.checks.foo ] is valid toml now [#225](https://github.com/mackerelio/mackerel-agent/pull/225) ([Songmu](https://github.com/Songmu))
     * Remove usr local bin again [#217](https://github.com/mackerelio/mackerel-agent/pull/217) ([Songmu](https://github.com/Songmu))
     * Fix typo [#221](https://github.com/mackerelio/mackerel-agent/pull/221) ([yukiyan](https://github.com/yukiyan))
+
+### display changes between two tags semantic versioned in markdown
+
+    % ghch -F markdown --latest
+    ## [v0.2.0](https://github.com/Songmu/ghch/compare/v0.1.3...v0.2.0) (2018-01-01)
+    
+    * introduce goxz for releasing and drop goxc dependency [#17](https://github.com/Songmu/ghch/pull/17) ([Songmu](https://github.com/Songmu))
+    * add --latest option for output changes between latest two semantic versioned tags [#16](https://github.com/Songmu/ghch/pull/16) ([Songmu](https://github.com/Songmu))
+    * fill oldest commit hash when from ref is empty [#15](https://github.com/Songmu/ghch/pull/15) ([Songmu](https://github.com/Songmu))
 
 ### display all changes
 
