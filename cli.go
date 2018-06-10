@@ -137,7 +137,7 @@ func (cli *CLI) Run(argv []string) int {
 					}
 					content = insertNewChangelog(byt, str)
 				} else {
-					content = "# Changelog\n\n" + str
+					content = "# Changelog\n\n" + str + "\n"
 				}
 				err = ioutil.WriteFile(opts.changelogMd, []byte(content), 0644)
 				if err != nil {
