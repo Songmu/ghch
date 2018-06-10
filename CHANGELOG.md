@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.2.1](https://github.com/Songmu/ghch/compare/v0.2.0...v0.2.1) (2018-06-10)
+
+* Insert a newline at the end of CHANGELOG.md when creating it [#18](https://github.com/Songmu/ghch/pull/18) ([Songmu](https://github.com/Songmu))
+* build with Go1.10 [#19](https://github.com/Songmu/ghch/pull/19) ([Songmu](https://github.com/Songmu))
+
 ## [v0.2.0](https://github.com/Songmu/ghch/compare/v0.1.3...v0.2.0) (2018-01-01)
 
 * introduce goxz for releasing and drop goxc dependency [#17](https://github.com/Songmu/ghch/pull/17) ([Songmu](https://github.com/Songmu))
