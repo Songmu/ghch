@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.3.0](https://github.com/Songmu/ghch/compare/v0.2.1...v0.3.0) (2018-10-02)
+
+* support go 1.11 and introduce vgo [#20](https://github.com/Songmu/ghch/pull/20) ([pyama86](https://github.com/pyama86))
+
 ## [v0.2.1](https://github.com/Songmu/ghch/compare/v0.2.0...v0.2.1) (2018-06-10)
 
 * Insert a newline at the end of CHANGELOG.md when creating it [#18](https://github.com/Songmu/ghch/pull/18) ([Songmu](https://github.com/Songmu))
