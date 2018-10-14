@@ -7,7 +7,7 @@ endif
 GO ?= GO111MODULE=on go
 
 devel-deps:
-	$(GO) get ${u} github.com/golang/lint/golint
+	$(GO) get ${u} golang.org/x/lint/golint
 	$(GO) get ${u} github.com/mattn/goveralls
 	$(GO) get ${u} github.com/motemen/gobump/cmd/gobump
 	$(GO) get ${u} github.com/Songmu/goxz/cmd/goxz
