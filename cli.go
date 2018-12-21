@@ -240,7 +240,7 @@ type Section struct {
 var tmplStr = `{{$ret := . -}}
 ## [{{.ToRevision}}](https://github.com/{{.Owner}}/{{.Repo}}/compare/{{.FromRevision}}...{{.ToRevision}}) ({{.ChangedAt.Format "2006-01-02"}})
 {{range .PullRequests}}
-* {{.Title}} [#{{.Number}}](https://github.com/{{$ret.Owner}}/{{$ret.Repo}}/pull/{{.Number}}) ([{{.User.Login}}]({{.User.HTMLURL}}))
+* {{.Title}} [#{{.Number}}]({{.HTMLURL}}) ([{{.User.Login}}]({{.User.HTMLURL}}))
 {{- end}}`
 
 var mdTmpl *template.Template
