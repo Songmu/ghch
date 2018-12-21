@@ -212,6 +212,10 @@ func (gh *ghch) getSection(from, to string) (Section, error) {
 		return Section{}, err
 	}
 	owner, repo := gh.ownerAndRepo()
+	htmlURL, err := gh.htmlURL(owner, repo)
+	if err != nil {
+		return Section{}, err
+	}
 	return Section{
 		PullRequests: r,
 		FromRevision: from,
@@ -219,6 +223,7 @@ func (gh *ghch) getSection(from, to string) (Section, error) {
 		ChangedAt:    t,
 		Owner:        owner,
 		Repo:         repo,
+		HTMLURL:      htmlURL,
 	}, nil
 }
 
@@ -235,10 +240,11 @@ type Section struct {
 	ChangedAt    time.Time              `json:"changed_at"`
 	Owner        string                 `json:"owner"`
 	Repo         string                 `json:"repo"`
+	HTMLURL      string                 `json:"html_url"`
 }
 
 var tmplStr = `{{$ret := . -}}
-## [{{.ToRevision}}](https://github.com/{{.Owner}}/{{.Repo}}/compare/{{.FromRevision}}...{{.ToRevision}}) ({{.ChangedAt.Format "2006-01-02"}})
+## [{{.ToRevision}}]({{.HTMLURL}}/compare/{{.FromRevision}}...{{.ToRevision}}) ({{.ChangedAt.Format "2006-01-02"}})
 {{range .PullRequests}}
 * {{.Title}} [#{{.Number}}]({{.HTMLURL}}) ([{{.User.Login}}]({{.User.HTMLURL}}))
 {{- end}}`

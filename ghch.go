@@ -122,6 +122,23 @@ func (gh *ghch) ownerAndRepo() (owner, repo string) {
 	return
 }
 
+func (gh *ghch) htmlURL(owner, repo string) (htmlURL string, err error) {
+	re, r := gh.client.Repositories().One(nil, octokit.M{"owner": owner, "repo": repo})
+	if r.Err != nil {
+		if rerr, ok := r.Err.(*octokit.ResponseError); ok {
+			if rerr.Response != nil && rerr.Response.StatusCode == http.StatusNotFound {
+				return
+			}
+		}
+		err = r.Err
+		log.Print(r.Err)
+		return
+	}
+
+	htmlURL = re.HTMLURL
+	return
+}
+
 func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest, err error) {
 	owner, repo := gh.ownerAndRepo()
 	prlogs, err := gh.mergedPRLogs(from, to)
