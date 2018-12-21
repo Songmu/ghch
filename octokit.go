@@ -25,6 +25,7 @@ func reduceUser(u octokit.User) octokit.User {
 		Login:     u.Login,
 		AvatarURL: u.AvatarURL,
 		Type:      u.Type,
+		HTMLURL:   u.HTMLURL,
 	}
 }
 
