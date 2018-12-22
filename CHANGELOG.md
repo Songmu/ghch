@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.4.0](https://github.com/Songmu/ghch/compare/v0.3.0...v0.4.0) (2018-12-23)
+
+* Fixed ghe support [#21](https://github.com/Songmu/ghch/pull/21) ([kennyj](https://github.com/kennyj))
+
 ## [v0.3.0](https://github.com/Songmu/ghch/compare/v0.2.1...v0.3.0) (2018-10-02)
 
 * support go 1.11 and introduce vgo [#20](https://github.com/Songmu/ghch/pull/20) ([pyama86](https://github.com/pyama86))
