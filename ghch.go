@@ -26,6 +26,7 @@ func exists(filename string) bool {
 	return err == nil
 }
 
+// Run the ghch
 func (gh *Ghch) Run() error {
 	gh.initialize()
 	if gh.All {

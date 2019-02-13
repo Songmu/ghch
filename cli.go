@@ -9,6 +9,7 @@ import (
 	"github.com/octokit/go-octokit/octokit"
 )
 
+// Ghch is main application struct
 type Ghch struct {
 	RepoPath    string `short:"r" long:"repo" default:"." description:"git repository path"`
 	BaseURL     string
