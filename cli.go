@@ -56,13 +56,21 @@ func (cli *CLI) Run(argv []string) int {
 		return exitCodeParseFlagError
 	}
 
-	gh := (&ghch{
-		remote:   opts.Remote,
-		repoPath: opts.RepoPath,
-		gitPath:  opts.GitPath,
-		verbose:  opts.Verbose,
-		token:    opts.Token,
-	}).initialize()
+	gh := (&Ghch{
+		RepoPath:    opts.RepoPath,
+		GitPath:     opts.GitPath,
+		From:        opts.From,
+		To:          opts.To,
+		Latest:      opts.Latest,
+		Token:       opts.Token,
+		Verbose:     opts.Verbose,
+		Remote:      opts.Remote,
+		Format:      opts.Format,
+		All:         opts.All,
+		NextVersion: opts.NextVersion,
+		Write:       opts.Write,
+		ChangelogMd: opts.changelogMd,
+	}).Initialize()
 
 	if opts.All {
 		chlog := Changelog{}
@@ -195,7 +203,7 @@ func parseArgs(args []string) (*flags.Parser, *ghOpts, error) {
 	return p, opts, err
 }
 
-func (gh *ghch) getSection(from, to string) (Section, error) {
+func (gh *Ghch) getSection(from, to string) (Section, error) {
 	if from == "" {
 		from, _ = gh.cmd("rev-list", "--max-parents=0", "HEAD")
 		from = strings.TrimSpace(from)
