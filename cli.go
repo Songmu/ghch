@@ -17,8 +17,9 @@ import (
 	"github.com/octokit/go-octokit/octokit"
 )
 
-type ghOpts struct {
+type Ghch struct {
 	RepoPath    string `short:"r" long:"repo" default:"." description:"git repository path"`
+	BaseURL     string
 	GitPath     string `short:"g" long:"git" default:"git" description:"git path"`
 	From        string `short:"f" long:"from" description:"git commit revision range start from"`
 	To          string `short:"t" long:"to" description:"git commit revision range end to"`
@@ -30,8 +31,9 @@ type ghOpts struct {
 	All         bool   `short:"A" long:"all" description:"output all changes"`
 	NextVersion string `short:"N" long:"next-version"`
 	Write       bool   `short:"w" description:"write result to file"`
-	changelogMd string
+	ChangelogMd string
 	// Tmpl string
+	client *octokit.Client
 }
 
 const (
@@ -48,31 +50,16 @@ type CLI struct {
 // Run the ghch
 func (cli *CLI) Run(argv []string) int {
 	log.SetOutput(cli.ErrStream)
-	p, opts, err := parseArgs(argv)
+	p, gh, err := parseArgs(argv)
 	if err != nil {
 		if ferr, ok := err.(*flags.Error); !ok || ferr.Type != flags.ErrHelp {
 			p.WriteHelp(cli.ErrStream)
 		}
 		return exitCodeParseFlagError
 	}
+	gh = gh.Initialize()
 
-	gh := (&Ghch{
-		RepoPath:    opts.RepoPath,
-		GitPath:     opts.GitPath,
-		From:        opts.From,
-		To:          opts.To,
-		Latest:      opts.Latest,
-		Token:       opts.Token,
-		Verbose:     opts.Verbose,
-		Remote:      opts.Remote,
-		Format:      opts.Format,
-		All:         opts.All,
-		NextVersion: opts.NextVersion,
-		Write:       opts.Write,
-		ChangelogMd: opts.changelogMd,
-	}).Initialize()
-
-	if opts.All {
+	if gh.All {
 		chlog := Changelog{}
 		vers := append(gh.versions(), "")
 		prevRev := ""
@@ -82,22 +69,22 @@ func (cli *CLI) Run(argv []string) int {
 				log.Print(err)
 				return exitCodeErr
 			}
-			if prevRev == "" && opts.NextVersion != "" {
-				r.ToRevision = opts.NextVersion
+			if prevRev == "" && gh.NextVersion != "" {
+				r.ToRevision = gh.NextVersion
 			}
 			chlog.Sections = append(chlog.Sections, r)
 			prevRev = rev
 		}
 
-		if opts.Format == "markdown" {
+		if gh.Format == "markdown" {
 			results := make([]string, len(chlog.Sections))
 			for i, v := range chlog.Sections {
 				results[i], _ = v.toMkdn()
 			}
 
-			if opts.Write {
+			if gh.Write {
 				content := "# Changelog\n\n" + strings.Join(results, "\n\n")
-				err := ioutil.WriteFile(opts.changelogMd, []byte(content), 0644)
+				err := ioutil.WriteFile(gh.ChangelogMd, []byte(content), 0644)
 				if err != nil {
 					log.Print(err)
 					return exitCodeErr
@@ -110,35 +97,35 @@ func (cli *CLI) Run(argv []string) int {
 			fmt.Fprintln(cli.OutStream, string(jsn))
 		}
 	} else {
-		if opts.Latest {
+		if gh.Latest {
 			vers := gh.versions()
 			if len(vers) > 0 {
-				opts.To = vers[0]
+				gh.To = vers[0]
 			}
-			if opts.From == "" && len(vers) > 1 {
-				opts.From = vers[1]
+			if gh.From == "" && len(vers) > 1 {
+				gh.From = vers[1]
 			}
-		} else if opts.From == "" && opts.To == "" {
-			opts.From = gh.getLatestSemverTag()
+		} else if gh.From == "" && gh.To == "" {
+			gh.From = gh.getLatestSemverTag()
 		}
-		r, err := gh.getSection(opts.From, opts.To)
+		r, err := gh.getSection(gh.From, gh.To)
 		if err != nil {
 			log.Print(err)
 			return exitCodeErr
 		}
-		if r.ToRevision == "" && opts.NextVersion != "" {
-			r.ToRevision = opts.NextVersion
+		if r.ToRevision == "" && gh.NextVersion != "" {
+			r.ToRevision = gh.NextVersion
 		}
-		if opts.Format == "markdown" {
+		if gh.Format == "markdown" {
 			str, err := r.toMkdn()
 			if err != nil {
 				log.Print(err)
 				return exitCodeErr
 			}
-			if opts.Write {
+			if gh.Write {
 				content := ""
-				if exists(opts.changelogMd) {
-					byt, err := ioutil.ReadFile(opts.changelogMd)
+				if exists(gh.ChangelogMd) {
+					byt, err := ioutil.ReadFile(gh.ChangelogMd)
 					if err != nil {
 						log.Print(err)
 						return exitCodeErr
@@ -147,7 +134,7 @@ func (cli *CLI) Run(argv []string) int {
 				} else {
 					content = "# Changelog\n\n" + str + "\n"
 				}
-				err = ioutil.WriteFile(opts.changelogMd, []byte(content), 0644)
+				err = ioutil.WriteFile(gh.ChangelogMd, []byte(content), 0644)
 				if err != nil {
 					log.Print(err)
 					return exitCodeErr
@@ -188,19 +175,19 @@ func exists(filename string) bool {
 	return err == nil
 }
 
-func parseArgs(args []string) (*flags.Parser, *ghOpts, error) {
-	opts := &ghOpts{}
-	p := flags.NewParser(opts, flags.Default)
+func parseArgs(args []string) (*flags.Parser, *Ghch, error) {
+	gh := &Ghch{}
+	p := flags.NewParser(gh, flags.Default)
 	p.Usage = fmt.Sprintf("[OPTIONS]\n\nVersion: %s (rev: %s)", version, revision)
 	rest, err := p.ParseArgs(args)
-	if opts.Write {
-		opts.Format = "markdown"
-		opts.changelogMd = "CHANGELOG.md"
+	if gh.Write {
+		gh.Format = "markdown"
+		gh.ChangelogMd = "CHANGELOG.md"
 		if len(rest) > 0 {
-			opts.changelogMd = rest[0]
+			gh.ChangelogMd = rest[0]
 		}
 	}
-	return p, opts, err
+	return p, gh, err
 }
 
 func (gh *Ghch) getSection(from, to string) (Section, error) {

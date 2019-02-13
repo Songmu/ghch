@@ -19,26 +19,6 @@ import (
 	"github.com/tcnksm/go-gitconfig"
 )
 
-type Ghch struct {
-	RepoPath string
-	GitPath  string
-	Remote   string
-	Verbose  bool
-	Token    string
-	BaseURL  string
-
-	All      bool
-	From, To string
-	Latest   bool
-
-	Format      string
-	Write       bool
-	NextVersion string
-	ChangelogMd string
-
-	client *octokit.Client
-}
-
 func (gh *Ghch) Initialize() *Ghch {
 	var auth octokit.AuthMethod
 	gh.setToken()
