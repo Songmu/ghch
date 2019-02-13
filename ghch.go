@@ -2,7 +2,9 @@ package ghch
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -19,7 +21,115 @@ import (
 	"github.com/tcnksm/go-gitconfig"
 )
 
-func (gh *Ghch) Initialize() *Ghch {
+func exists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
+}
+
+func (gh *Ghch) Run() error {
+	gh.initialize()
+	if gh.All {
+		return gh.runAll()
+	}
+	return gh.run()
+}
+
+func (gh *Ghch) runAll() error {
+	chlog := Changelog{}
+	vers := append(gh.versions(), "")
+	prevRev := ""
+	for _, rev := range vers {
+		r, err := gh.getSection(rev, prevRev)
+		if err != nil {
+			return err
+		}
+		if prevRev == "" && gh.NextVersion != "" {
+			r.ToRevision = gh.NextVersion
+		}
+		chlog.Sections = append(chlog.Sections, r)
+		prevRev = rev
+	}
+
+	if gh.Format != "markdown" { // json
+		encoder := json.NewEncoder(gh.OutStream)
+		encoder.SetIndent("", "  ")
+		return encoder.Encode(chlog)
+	}
+	results := make([]string, len(chlog.Sections))
+	for i, v := range chlog.Sections {
+		results[i], _ = v.toMkdn()
+	}
+	if gh.Write {
+		content := "# Changelog\n\n" + strings.Join(results, "\n\n")
+		if err := ioutil.WriteFile(gh.ChangelogMd, []byte(content), 0644); err != nil {
+			return err
+		}
+	} else {
+		fmt.Fprintln(gh.OutStream, strings.Join(results, "\n\n"))
+	}
+	return nil
+}
+
+func (gh *Ghch) run() error {
+	if gh.Latest {
+		vers := gh.versions()
+		if len(vers) > 0 {
+			gh.To = vers[0]
+		}
+		if gh.From == "" && len(vers) > 1 {
+			gh.From = vers[1]
+		}
+	} else if gh.From == "" && gh.To == "" {
+		gh.From = gh.getLatestSemverTag()
+	}
+	r, err := gh.getSection(gh.From, gh.To)
+	if err != nil {
+		return err
+	}
+	if r.ToRevision == "" && gh.NextVersion != "" {
+		r.ToRevision = gh.NextVersion
+	}
+
+	if gh.Format != "markdown" { // json
+		encoder := json.NewEncoder(gh.OutStream)
+		encoder.SetIndent("", "  ")
+		return encoder.Encode(r)
+	}
+	str, err := r.toMkdn()
+	if err != nil {
+		return err
+	}
+	if gh.Write {
+		content := ""
+		if exists(gh.ChangelogMd) {
+			byt, err := ioutil.ReadFile(gh.ChangelogMd)
+			if err != nil {
+				return err
+			}
+			content = insertNewChangelog(byt, str)
+		} else {
+			content = "# Changelog\n\n" + str + "\n"
+		}
+		if err := ioutil.WriteFile(gh.ChangelogMd, []byte(content), 0644); err != nil {
+			return err
+		}
+	} else {
+		fmt.Fprintln(gh.OutStream, str)
+	}
+	return nil
+}
+
+func (gh *Ghch) initialize() {
+	if gh.Write {
+		gh.Format = "markdown"
+		if gh.ChangelogMd != "" {
+			gh.ChangelogMd = "CHANGELOG.md"
+		}
+	}
+	if gh.OutStream == nil {
+		gh.OutStream = os.Stdout
+	}
+
 	var auth octokit.AuthMethod
 	gh.setToken()
 	if gh.Token != "" {
@@ -27,14 +137,11 @@ func (gh *Ghch) Initialize() *Ghch {
 	}
 
 	gh.setBaseURL()
-
 	if gh.BaseURL != "" {
 		gh.client = octokit.NewClientWith(gh.BaseURL, "Octokit Go", auth, nil)
-		return gh
+	} else {
+		gh.client = octokit.NewClient(auth)
 	}
-
-	gh.client = octokit.NewClient(auth)
-	return gh
 }
 
 func (gh *Ghch) setToken() {
