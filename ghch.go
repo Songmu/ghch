@@ -2,7 +2,9 @@ package ghch
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -19,65 +21,161 @@ import (
 	"github.com/tcnksm/go-gitconfig"
 )
 
-type ghch struct {
-	repoPath string
-	gitPath  string
-	remote   string
-	verbose  bool
-	token    string
-	baseURL  string
-	client   *octokit.Client
+func exists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
 }
 
-func (gh *ghch) initialize() *ghch {
+// Run the ghch
+func (gh *Ghch) Run() error {
+	gh.initialize()
+	if gh.All {
+		return gh.runAll()
+	}
+	return gh.run()
+}
+
+func (gh *Ghch) runAll() error {
+	chlog := Changelog{}
+	vers := append(gh.versions(), "")
+	prevRev := ""
+	for _, rev := range vers {
+		r, err := gh.getSection(rev, prevRev)
+		if err != nil {
+			return err
+		}
+		if prevRev == "" && gh.NextVersion != "" {
+			r.ToRevision = gh.NextVersion
+		}
+		chlog.Sections = append(chlog.Sections, r)
+		prevRev = rev
+	}
+
+	if gh.Format != "markdown" { // json
+		encoder := json.NewEncoder(gh.OutStream)
+		encoder.SetIndent("", "  ")
+		return encoder.Encode(chlog)
+	}
+	results := make([]string, len(chlog.Sections))
+	for i, v := range chlog.Sections {
+		results[i], _ = v.toMkdn()
+	}
+	if gh.Write {
+		content := "# Changelog\n\n" + strings.Join(results, "\n\n")
+		if err := ioutil.WriteFile(gh.ChangelogMd, []byte(content), 0644); err != nil {
+			return err
+		}
+	} else {
+		fmt.Fprintln(gh.OutStream, strings.Join(results, "\n\n"))
+	}
+	return nil
+}
+
+func (gh *Ghch) run() error {
+	if gh.Latest {
+		vers := gh.versions()
+		if len(vers) > 0 {
+			gh.To = vers[0]
+		}
+		if gh.From == "" && len(vers) > 1 {
+			gh.From = vers[1]
+		}
+	} else if gh.From == "" && gh.To == "" {
+		gh.From = gh.getLatestSemverTag()
+	}
+	r, err := gh.getSection(gh.From, gh.To)
+	if err != nil {
+		return err
+	}
+	if r.ToRevision == "" && gh.NextVersion != "" {
+		r.ToRevision = gh.NextVersion
+	}
+
+	if gh.Format != "markdown" { // json
+		encoder := json.NewEncoder(gh.OutStream)
+		encoder.SetIndent("", "  ")
+		return encoder.Encode(r)
+	}
+	str, err := r.toMkdn()
+	if err != nil {
+		return err
+	}
+	if gh.Write {
+		content := ""
+		if exists(gh.ChangelogMd) {
+			byt, err := ioutil.ReadFile(gh.ChangelogMd)
+			if err != nil {
+				return err
+			}
+			content = insertNewChangelog(byt, str)
+		} else {
+			content = "# Changelog\n\n" + str + "\n"
+		}
+		if err := ioutil.WriteFile(gh.ChangelogMd, []byte(content), 0644); err != nil {
+			return err
+		}
+	} else {
+		fmt.Fprintln(gh.OutStream, str)
+	}
+	return nil
+}
+
+func (gh *Ghch) initialize() {
+	if gh.Write {
+		gh.Format = "markdown"
+		if gh.ChangelogMd != "" {
+			gh.ChangelogMd = "CHANGELOG.md"
+		}
+	}
+	if gh.OutStream == nil {
+		gh.OutStream = os.Stdout
+	}
+
 	var auth octokit.AuthMethod
 	gh.setToken()
-	if gh.token != "" {
-		auth = octokit.TokenAuth{AccessToken: gh.token}
+	if gh.Token != "" {
+		auth = octokit.TokenAuth{AccessToken: gh.Token}
 	}
 
 	gh.setBaseURL()
-
-	if gh.baseURL != "" {
-		gh.client = octokit.NewClientWith(gh.baseURL, "Octokit Go", auth, nil)
-		return gh
+	if gh.BaseURL != "" {
+		gh.client = octokit.NewClientWith(gh.BaseURL, "Octokit Go", auth, nil)
+	} else {
+		gh.client = octokit.NewClient(auth)
 	}
-
-	gh.client = octokit.NewClient(auth)
-	return gh
 }
 
-func (gh *ghch) setToken() {
-	if gh.token != "" {
+func (gh *Ghch) setToken() {
+	if gh.Token != "" {
 		return
 	}
-	if gh.token = os.Getenv("GITHUB_TOKEN"); gh.token != "" {
+	if gh.Token = os.Getenv("GITHUB_TOKEN"); gh.Token != "" {
 		return
 	}
-	gh.token, _ = gitconfig.GithubToken()
+	gh.Token, _ = gitconfig.GithubToken()
 	return
 }
 
-func (gh *ghch) setBaseURL() {
-	if gh.baseURL != "" {
+func (gh *Ghch) setBaseURL() {
+	if gh.BaseURL != "" {
 		return
 	}
-	if gh.baseURL = os.Getenv("GITHUB_API"); gh.baseURL != "" {
+	if gh.BaseURL = os.Getenv("GITHUB_API"); gh.BaseURL != "" {
 		return
 	}
 
 	return
 }
 
-func (gh *ghch) gitProg() string {
-	if gh.gitPath != "" {
-		return gh.gitPath
+func (gh *Ghch) gitProg() string {
+	if gh.GitPath != "" {
+		return gh.GitPath
 	}
 	return "git"
 }
 
-func (gh *ghch) cmd(argv ...string) (string, error) {
-	arg := []string{"-C", gh.repoPath}
+func (gh *Ghch) cmd(argv ...string) (string, error) {
+	arg := []string{"-C", gh.RepoPath}
 	arg = append(arg, argv...)
 	cmd := exec.Command(gh.gitProg(), arg...)
 	cmd.Env = append(os.Environ(), "LANG=C")
@@ -91,24 +189,24 @@ func (gh *ghch) cmd(argv ...string) (string, error) {
 
 var verReg = regexp.MustCompile(`^v?[0-9]+(?:\.[0-9]+){0,2}$`)
 
-func (gh *ghch) versions() []string {
+func (gh *Ghch) versions() []string {
 	sv := gitsemvers.Semvers{
-		RepoPath: gh.repoPath,
-		GitPath:  gh.gitPath,
+		RepoPath: gh.RepoPath,
+		GitPath:  gh.GitPath,
 	}
 	return sv.VersionStrings()
 }
 
-func (gh *ghch) getRemote() string {
-	if gh.remote != "" {
-		return gh.remote
+func (gh *Ghch) getRemote() string {
+	if gh.Remote != "" {
+		return gh.Remote
 	}
 	return "origin"
 }
 
 var repoURLReg = regexp.MustCompile(`([^/:]+)/([^/]+?)(?:\.git)?$`)
 
-func (gh *ghch) ownerAndRepo() (owner, repo string) {
+func (gh *Ghch) ownerAndRepo() (owner, repo string) {
 	out, _ := gh.cmd("remote", "-v")
 	remotes := strings.Split(out, "\n")
 	for _, r := range remotes {
@@ -122,7 +220,7 @@ func (gh *ghch) ownerAndRepo() (owner, repo string) {
 	return
 }
 
-func (gh *ghch) htmlURL(owner, repo string) (htmlURL string, err error) {
+func (gh *Ghch) htmlURL(owner, repo string) (htmlURL string, err error) {
 	re, r := gh.client.Repositories().One(nil, octokit.M{"owner": owner, "repo": repo})
 	if r.Err != nil {
 		if rerr, ok := r.Err.(*octokit.ResponseError); ok {
@@ -139,7 +237,7 @@ func (gh *ghch) htmlURL(owner, repo string) (htmlURL string, err error) {
 	return
 }
 
-func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest, err error) {
+func (gh *Ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest, err error) {
 	owner, repo := gh.ownerAndRepo()
 	prlogs, err := gh.mergedPRLogs(from, to)
 	if err != nil {
@@ -171,7 +269,7 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest, err erro
 			if strings.Replace(pr.Head.Label, ":", "/", 1) != prlog.branch {
 				return
 			}
-			if !gh.verbose {
+			if !gh.Verbose {
 				pr = reducePR(pr)
 			}
 			prsWithNil[i] = pr
@@ -191,7 +289,7 @@ func (gh *ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest, err erro
 	return
 }
 
-func (gh *ghch) getLatestSemverTag() string {
+func (gh *Ghch) getLatestSemverTag() string {
 	vers := gh.versions()
 	if len(vers) < 1 {
 		return ""
@@ -204,7 +302,7 @@ type mergedPRLog struct {
 	branch string
 }
 
-func (gh *ghch) mergedPRLogs(from, to string) (nums []*mergedPRLog, err error) {
+func (gh *Ghch) mergedPRLogs(from, to string) (nums []*mergedPRLog, err error) {
 	revisionRange := fmt.Sprintf("%s..%s", from, to)
 	out, err := gh.cmd("log", revisionRange, "--merges", "--oneline")
 	if err != nil {
@@ -229,7 +327,7 @@ func parseMergedPRLogs(out string) (prs []*mergedPRLog) {
 	return
 }
 
-func (gh *ghch) getChangedAt(rev string) (time.Time, error) {
+func (gh *Ghch) getChangedAt(rev string) (time.Time, error) {
 	if rev == "" {
 		rev = "HEAD"
 	}
