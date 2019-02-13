@@ -34,4 +34,4 @@ crossbuild: devel-deps
 release:
 	_tools/releng
 
-.PHONY: test devel-deps lint cover crossbuild release
+.PHONY: test devel-deps lint cover build crossbuild release
