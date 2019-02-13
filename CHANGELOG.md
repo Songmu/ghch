@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.5.0](https://github.com/Songmu/ghch/compare/v0.4.0...v0.5.0) (2019-02-14)
+
+* publish type Ghch for reusability as a library [#23](https://github.com/Songmu/ghch/pull/23) ([Songmu](https://github.com/Songmu))
+* reduce go.mod and go.sum [#22](https://github.com/Songmu/ghch/pull/22) ([Songmu](https://github.com/Songmu))
+
 ## [v0.4.0](https://github.com/Songmu/ghch/compare/v0.3.0...v0.4.0) (2018-12-23)
 
 * Fixed ghe support [#21](https://github.com/Songmu/ghch/pull/21) ([kennyj](https://github.com/kennyj))
