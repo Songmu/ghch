@@ -123,7 +123,7 @@ func (gh *Ghch) run() error {
 func (gh *Ghch) initialize() {
 	if gh.Write {
 		gh.Format = "markdown"
-		if gh.ChangelogMd != "" {
+		if gh.ChangelogMd == "" {
 			gh.ChangelogMd = "CHANGELOG.md"
 		}
 	}
