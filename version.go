@@ -1,5 +1,5 @@
 package ghch
 
-const version = "0.5.0"
+const version = "0.5.1"
 
 var revision = "HEAD"

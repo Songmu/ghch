@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.1](https://github.com/Songmu/ghch/compare/v0.5.0...0.5.1) (2019-02-17)
+
+* introduce godzil [#24](https://github.com/Songmu/ghch/pull/24) ([Songmu](https://github.com/Songmu))
+
 ## [v0.5.0](https://github.com/Songmu/ghch/compare/v0.4.0...v0.5.0) (2019-02-14)
 
 * publish type Ghch for reusability as a library [#23](https://github.com/Songmu/ghch/pull/23) ([Songmu](https://github.com/Songmu))
