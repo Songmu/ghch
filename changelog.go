@@ -8,7 +8,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/octokit/go-octokit/octokit"
+	"github.com/google/go-github/github"
 )
 
 // Changelog contains Sectionst
@@ -38,13 +38,13 @@ func insertNewChangelog(orig []byte, section string) string {
 
 // Section contains changes between two revisions
 type Section struct {
-	PullRequests []*octokit.PullRequest `json:"pull_requests"`
-	FromRevision string                 `json:"from_revision"`
-	ToRevision   string                 `json:"to_revision"`
-	ChangedAt    time.Time              `json:"changed_at"`
-	Owner        string                 `json:"owner"`
-	Repo         string                 `json:"repo"`
-	HTMLURL      string                 `json:"html_url"`
+	PullRequests []*github.PullRequest `json:"pull_requests"`
+	FromRevision string                `json:"from_revision"`
+	ToRevision   string                `json:"to_revision"`
+	ChangedAt    time.Time             `json:"changed_at"`
+	Owner        string                `json:"owner"`
+	Repo         string                `json:"repo"`
+	HTMLURL      string                `json:"html_url"`
 }
 
 var tmplStr = `{{$ret := . -}}

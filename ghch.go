@@ -2,11 +2,13 @@ package ghch
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
@@ -16,9 +18,10 @@ import (
 	"time"
 
 	"github.com/Songmu/gitsemvers"
-	"github.com/octokit/go-octokit/octokit"
+	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"github.com/tcnksm/go-gitconfig"
+	"golang.org/x/oauth2"
 )
 
 func exists(filename string) bool {
@@ -28,7 +31,9 @@ func exists(filename string) bool {
 
 // Run the ghch
 func (gh *Ghch) Run() error {
-	gh.initialize()
+	if err := gh.initialize(); err != nil {
+		return err
+	}
 	if gh.All {
 		return gh.runAll()
 	}
@@ -120,7 +125,7 @@ func (gh *Ghch) run() error {
 	return nil
 }
 
-func (gh *Ghch) initialize() {
+func (gh *Ghch) initialize() error {
 	if gh.Write {
 		gh.Format = "markdown"
 		if gh.ChangelogMd == "" {
@@ -131,18 +136,23 @@ func (gh *Ghch) initialize() {
 		gh.OutStream = os.Stdout
 	}
 
-	var auth octokit.AuthMethod
+	var oauthClient *http.Client
 	gh.setToken()
 	if gh.Token != "" {
-		auth = octokit.TokenAuth{AccessToken: gh.Token}
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: gh.Token})
+		oauthClient = oauth2.NewClient(context.Background(), ts)
 	}
+	gh.client = github.NewClient(oauthClient)
 
 	gh.setBaseURL()
 	if gh.BaseURL != "" {
-		gh.client = octokit.NewClientWith(gh.BaseURL, "Octokit Go", auth, nil)
-	} else {
-		gh.client = octokit.NewClient(auth)
+		u, err := url.Parse(gh.BaseURL)
+		if err != nil {
+			return err
+		}
+		gh.client.BaseURL = u
 	}
+	return nil
 }
 
 func (gh *Ghch) setToken() {
@@ -153,7 +163,6 @@ func (gh *Ghch) setToken() {
 		return
 	}
 	gh.Token, _ = gitconfig.GithubToken()
-	return
 }
 
 func (gh *Ghch) setBaseURL() {
@@ -163,8 +172,6 @@ func (gh *Ghch) setBaseURL() {
 	if gh.BaseURL = os.Getenv("GITHUB_API"); gh.BaseURL != "" {
 		return
 	}
-
-	return
 }
 
 func (gh *Ghch) gitProg() string {
@@ -220,53 +227,43 @@ func (gh *Ghch) ownerAndRepo() (owner, repo string) {
 	return
 }
 
-func (gh *Ghch) htmlURL(owner, repo string) (htmlURL string, err error) {
-	re, r := gh.client.Repositories().One(nil, octokit.M{"owner": owner, "repo": repo})
-	if r.Err != nil {
-		if rerr, ok := r.Err.(*octokit.ResponseError); ok {
-			if rerr.Response != nil && rerr.Response.StatusCode == http.StatusNotFound {
-				return
-			}
+func (gh *Ghch) htmlURL(owner, repoStr string) (string, error) {
+	repo, resp, err := gh.client.Repositories.Get(context.Background(), owner, repoStr)
+	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			return "", nil
 		}
-		err = r.Err
-		log.Print(r.Err)
-		return
+		return "", err
 	}
-
-	htmlURL = re.HTMLURL
-	return
+	return *repo.HTMLURL, nil
 }
 
-func (gh *Ghch) mergedPRs(from, to string) (prs []*octokit.PullRequest, err error) {
+func (gh *Ghch) mergedPRs(from, to string) (prs []*github.PullRequest, err error) {
 	owner, repo := gh.ownerAndRepo()
 	prlogs, err := gh.mergedPRLogs(from, to)
 	if err != nil {
 		return
 	}
-	prs = make([]*octokit.PullRequest, 0, len(prlogs))
-	prsWithNil := make([]*octokit.PullRequest, len(prlogs))
+	ctx := context.Background()
+	prs = make([]*github.PullRequest, 0, len(prlogs))
+	prsWithNil := make([]*github.PullRequest, len(prlogs))
 	errsWithNil := make([]error, len(prlogs))
-
 	var wg sync.WaitGroup
-
 	for i, prlog := range prlogs {
 		wg.Add(1)
 		go func(i int, prlog *mergedPRLog) {
 			defer wg.Done()
-			url, _ := octokit.PullRequestsURL.Expand(octokit.M{"owner": owner, "repo": repo, "number": prlog.num})
-			pr, r := gh.client.PullRequests(url).One()
-			if r.Err != nil {
-				if rerr, ok := r.Err.(*octokit.ResponseError); ok {
-					if rerr.Response != nil && rerr.Response.StatusCode == http.StatusNotFound {
-						return
-					}
+			pr, resp, err := gh.client.PullRequests.Get(ctx, owner, repo, prlog.num)
+			if err != nil {
+				if resp != nil && resp.StatusCode == http.StatusNotFound {
+					return
 				}
-				errsWithNil[i] = r.Err
-				log.Print(r.Err)
+				errsWithNil[i] = err
+				log.Println(err)
 				return
 			}
 			// replace repoowner:branch-name to repo-owner/branch-name
-			if strings.Replace(pr.Head.Label, ":", "/", 1) != prlog.branch {
+			if strings.Replace(*pr.Head.Label, ":", "/", 1) != prlog.branch {
 				return
 			}
 			if !gh.Verbose {
