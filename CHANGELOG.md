@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.10.0](https://github.com/Songmu/ghch/compare/v0.5.1...v0.10.0) (2019-04-30)
+
+* migrate from octokit to go-github/github [#25](https://github.com/Songmu/ghch/pull/25) ([Songmu](https://github.com/Songmu))
+
 ## [v0.5.1](https://github.com/Songmu/ghch/compare/v0.5.0...v0.5.1) (2019-02-17)
 
 * introduce godzil [#24](https://github.com/Songmu/ghch/pull/24) ([Songmu](https://github.com/Songmu))
