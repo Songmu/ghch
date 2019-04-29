@@ -31,21 +31,22 @@ func exists(filename string) bool {
 
 // Run the ghch
 func (gh *Ghch) Run() error {
-	if err := gh.initialize(); err != nil {
+	ctx := context.Background()
+	if err := gh.initialize(ctx); err != nil {
 		return err
 	}
 	if gh.All {
-		return gh.runAll()
+		return gh.runAll(ctx)
 	}
-	return gh.run()
+	return gh.run(ctx)
 }
 
-func (gh *Ghch) runAll() error {
+func (gh *Ghch) runAll(ctx context.Context) error {
 	chlog := Changelog{}
 	vers := append(gh.versions(), "")
 	prevRev := ""
 	for _, rev := range vers {
-		r, err := gh.getSection(rev, prevRev)
+		r, err := gh.getSection(ctx, rev, prevRev)
 		if err != nil {
 			return err
 		}
@@ -76,7 +77,7 @@ func (gh *Ghch) runAll() error {
 	return nil
 }
 
-func (gh *Ghch) run() error {
+func (gh *Ghch) run(ctx context.Context) error {
 	if gh.Latest {
 		vers := gh.versions()
 		if len(vers) > 0 {
@@ -88,7 +89,7 @@ func (gh *Ghch) run() error {
 	} else if gh.From == "" && gh.To == "" {
 		gh.From = gh.getLatestSemverTag()
 	}
-	r, err := gh.getSection(gh.From, gh.To)
+	r, err := gh.getSection(ctx, gh.From, gh.To)
 	if err != nil {
 		return err
 	}
@@ -125,7 +126,7 @@ func (gh *Ghch) run() error {
 	return nil
 }
 
-func (gh *Ghch) initialize() error {
+func (gh *Ghch) initialize(ctx context.Context) error {
 	if gh.Write {
 		gh.Format = "markdown"
 		if gh.ChangelogMd == "" {
@@ -140,7 +141,7 @@ func (gh *Ghch) initialize() error {
 	gh.setToken()
 	if gh.Token != "" {
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: gh.Token})
-		oauthClient = oauth2.NewClient(context.Background(), ts)
+		oauthClient = oauth2.NewClient(ctx, ts)
 	}
 	gh.client = github.NewClient(oauthClient)
 
@@ -227,8 +228,8 @@ func (gh *Ghch) ownerAndRepo() (owner, repo string) {
 	return
 }
 
-func (gh *Ghch) htmlURL(owner, repoStr string) (string, error) {
-	repo, resp, err := gh.client.Repositories.Get(context.Background(), owner, repoStr)
+func (gh *Ghch) htmlURL(ctx context.Context, owner, repoStr string) (string, error) {
+	repo, resp, err := gh.client.Repositories.Get(ctx, owner, repoStr)
 	if err != nil {
 		if resp != nil && resp.StatusCode == http.StatusNotFound {
 			return "", nil
@@ -238,13 +239,12 @@ func (gh *Ghch) htmlURL(owner, repoStr string) (string, error) {
 	return *repo.HTMLURL, nil
 }
 
-func (gh *Ghch) mergedPRs(from, to string) (prs []*github.PullRequest, err error) {
+func (gh *Ghch) mergedPRs(ctx context.Context, from, to string) (prs []*github.PullRequest, err error) {
 	owner, repo := gh.ownerAndRepo()
 	prlogs, err := gh.mergedPRLogs(from, to)
 	if err != nil {
 		return
 	}
-	ctx := context.Background()
 	prs = make([]*github.PullRequest, 0, len(prlogs))
 	prsWithNil := make([]*github.PullRequest, len(prlogs))
 	errsWithNil := make([]error, len(prlogs))

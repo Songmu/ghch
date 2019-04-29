@@ -3,6 +3,7 @@ package ghch
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"log"
 	"strings"
 	"text/template"
@@ -72,7 +73,7 @@ func (rs Section) toMkdn() (string, error) {
 	return b.String(), nil
 }
 
-func (gh *Ghch) getSection(from, to string) (Section, error) {
+func (gh *Ghch) getSection(ctx context.Context, from, to string) (Section, error) {
 	if from == "" {
 		from, _ = gh.cmd("rev-list", "--max-parents=0", "HEAD")
 		from = strings.TrimSpace(from)
@@ -80,7 +81,7 @@ func (gh *Ghch) getSection(from, to string) (Section, error) {
 			from = from[:12]
 		}
 	}
-	r, err := gh.mergedPRs(from, to)
+	r, err := gh.mergedPRs(ctx, from, to)
 	if err != nil {
 		return Section{}, err
 	}
@@ -89,7 +90,7 @@ func (gh *Ghch) getSection(from, to string) (Section, error) {
 		return Section{}, err
 	}
 	owner, repo := gh.ownerAndRepo()
-	htmlURL, err := gh.htmlURL(owner, repo)
+	htmlURL, err := gh.htmlURL(ctx, owner, repo)
 	if err != nil {
 		return Section{}, err
 	}
