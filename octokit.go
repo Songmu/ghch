@@ -1,9 +1,11 @@
 package ghch
 
-import "github.com/octokit/go-octokit/octokit"
+import (
+	"github.com/google/go-github/github"
+)
 
-func reducePR(pr *octokit.PullRequest) *octokit.PullRequest {
-	return &octokit.PullRequest{
+func reducePR(pr *github.PullRequest) *github.PullRequest {
+	return &github.PullRequest{
 		HTMLURL:        pr.HTMLURL,
 		Title:          pr.Title,
 		Number:         pr.Number,
@@ -12,16 +14,16 @@ func reducePR(pr *octokit.PullRequest) *octokit.PullRequest {
 		CreatedAt:      pr.CreatedAt,
 		UpdatedAt:      pr.UpdatedAt,
 		MergedAt:       pr.MergedAt,
-		MergeCommitSha: pr.MergeCommitSha,
+		MergeCommitSHA: pr.MergeCommitSHA,
 		User:           reduceUser(pr.User),
-		Head:           reducePullRequestCommit(pr.Head),
-		Base:           reducePullRequestCommit(pr.Base),
+		Head:           reducePullRequestBranch(pr.Head),
+		Base:           reducePullRequestBranch(pr.Base),
 		MergedBy:       reduceUser(pr.MergedBy),
 	}
 }
 
-func reduceUser(u octokit.User) octokit.User {
-	return octokit.User{
+func reduceUser(u *github.User) *github.User {
+	return &github.User{
 		Login:     u.Login,
 		AvatarURL: u.AvatarURL,
 		Type:      u.Type,
@@ -29,11 +31,11 @@ func reduceUser(u octokit.User) octokit.User {
 	}
 }
 
-func reduceRepo(r *octokit.Repository) *octokit.Repository {
+func reduceRepo(r *github.Repository) *github.Repository {
 	if r == nil {
 		return nil
 	}
-	return &octokit.Repository{
+	return &github.Repository{
 		Owner:    reduceUser(r.Owner),
 		Name:     r.Name,
 		FullName: r.FullName,
@@ -41,12 +43,12 @@ func reduceRepo(r *octokit.Repository) *octokit.Repository {
 	}
 }
 
-func reducePullRequestCommit(prc octokit.PullRequestCommit) octokit.PullRequestCommit {
-	return octokit.PullRequestCommit{
-		Label: prc.Label,
-		Ref:   prc.Ref,
-		Sha:   prc.Sha,
-		User:  reduceUser(prc.User),
-		Repo:  reduceRepo(prc.Repo),
+func reducePullRequestBranch(prb *github.PullRequestBranch) *github.PullRequestBranch {
+	return &github.PullRequestBranch{
+		Label: prb.Label,
+		Ref:   prb.Ref,
+		SHA:   prb.SHA,
+		User:  reduceUser(prb.User),
+		Repo:  reduceRepo(prb.Repo),
 	}
 }

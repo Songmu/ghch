@@ -5,8 +5,8 @@ import (
 	"io"
 	"log"
 
+	"github.com/google/go-github/github"
 	"github.com/jessevdk/go-flags"
-	"github.com/octokit/go-octokit/octokit"
 )
 
 // Ghch is main application struct
@@ -28,7 +28,7 @@ type Ghch struct {
 	// Tmpl string
 	OutStream io.Writer
 
-	client *octokit.Client
+	client *github.Client
 }
 
 const (
