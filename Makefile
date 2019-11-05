@@ -1,9 +1,7 @@
 VERSION = $(shell godzil show-version)
 CURRENT_REVISION = $(shell git rev-parse --short HEAD)
 BUILD_LDFLAGS = "-s -w -X github.com/Songmu/ghch.revision=$(CURRENT_REVISION)"
-ifdef update
-  u=-u
-endif
+u := $(if $(update),-u)
 
 export GO111MODULE=on
 
@@ -27,12 +25,7 @@ test: deps
 
 .PHONY: lint
 lint: devel-deps
-	go vet
 	golint -set_exit_status
-
-.PHONY: cover
-cover: devel-deps
-	goveralls
 
 .PHONY: build
 build: deps
@@ -42,14 +35,17 @@ build: deps
 install: deps
 	go install -ldflags=$(BUILD_LDFLAGS) ./cmd/ghch
 
+.PHONY: release
+release:
+	godzil release
+
+CREDITS: deps devel-deps go.sum
+	gocredits -w
+
 .PHONY: crossbuild
 crossbuild: devel-deps
 	goxz -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) \
 	  -d=./dist/v$(VERSION) ./cmd/ghch
-
-.PHONY: release
-release:
-	godzil release
 
 .PHONY: upload
 upload:
