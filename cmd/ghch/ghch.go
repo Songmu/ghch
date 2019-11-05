@@ -10,8 +10,7 @@ import (
 
 func main() {
 	log.SetFlags(0)
-	err := (&ghch.CLI{ErrStream: os.Stderr, OutStream: os.Stdout}).Run(context.Background(), os.Args[1:])
-	if err != nil {
+	if err := ghch.Run(context.Background(), os.Args[1:], os.Stdout, os.Stderr); err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}
