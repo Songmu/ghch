@@ -1,11 +1,17 @@
 package main
 
 import (
+	"context"
+	"log"
 	"os"
 
 	"github.com/Songmu/ghch"
 )
 
 func main() {
-	os.Exit((&ghch.CLI{ErrStream: os.Stderr, OutStream: os.Stdout}).Run(os.Args[1:]))
+	log.SetFlags(0)
+	if err := ghch.Run(context.Background(), os.Args[1:], os.Stdout, os.Stderr); err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
 }

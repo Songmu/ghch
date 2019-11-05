@@ -1,6 +1,7 @@
 package ghch
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -31,39 +32,39 @@ type Ghch struct {
 	client *github.Client
 }
 
-const (
-	exitCodeOK = iota
-	exitCodeParseFlagError
-	exitCodeErr
-)
+// Run the ghch
+func Run(ctx context.Context, argv []string, outStream, errStream io.Writer) error {
+	return (&cli{OutStream: outStream, ErrStream: errStream}).Run(ctx, argv)
+}
 
-// CLI is struct for command line tool
-type CLI struct {
+type cli struct {
 	OutStream, ErrStream io.Writer
 }
 
-// Run the ghch
-func (cli *CLI) Run(argv []string) int {
-	log.SetOutput(cli.ErrStream)
-	p, gh, err := cli.parseArgs(argv)
+func (cl *cli) Run(ctx context.Context, argv []string) error {
+	log.SetOutput(cl.ErrStream)
+	gh, err := cl.parseArgs(argv)
 	if err != nil {
-		if ferr, ok := err.(*flags.Error); !ok || ferr.Type != flags.ErrHelp {
-			p.WriteHelp(cli.ErrStream)
+		if ferr, ok := err.(*flags.Error); ok {
+			if ferr.Type == flags.ErrHelp {
+				fmt.Fprint(cl.OutStream, err)
+				return nil
+			}
+			return ferr
 		}
-		return exitCodeParseFlagError
+		return err
 	}
 	if err := gh.Run(); err != nil {
-		log.Println(err)
-		return exitCodeErr
+		return err
 	}
-	return exitCodeOK
+	return nil
 }
 
-func (cli *CLI) parseArgs(args []string) (*flags.Parser, *Ghch, error) {
+func (cl *cli) parseArgs(args []string) (*Ghch, error) {
 	gh := &Ghch{
-		OutStream: cli.OutStream,
+		OutStream: cl.OutStream,
 	}
-	p := flags.NewParser(gh, flags.Default)
+	p := flags.NewParser(gh, flags.HelpFlag|flags.PassDoubleDash)
 	p.Usage = fmt.Sprintf("[OPTIONS]\n\nVersion: %s (rev: %s)", version, revision)
 	rest, err := p.ParseArgs(args)
 	if gh.Write {
@@ -73,5 +74,5 @@ func (cli *CLI) parseArgs(args []string) (*flags.Parser, *Ghch, error) {
 			gh.ChangelogMd = rest[0]
 		}
 	}
-	return p, gh, err
+	return gh, err
 }
