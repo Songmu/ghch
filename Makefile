@@ -14,9 +14,9 @@ deps:
 devel-deps:
 	GO111MODULE=off go get ${u} \
 	  golang.org/x/lint/golint            \
-	  github.com/mattn/goveralls          \
 	  github.com/Songmu/goxz/cmd/goxz     \
 	  github.com/Songmu/godzil/cmd/godzil \
+	  github.com/Songmu/tcnksm/ghr        \
 	  github.com/Songmu/gocredits/cmd/gocredits
 
 .PHONY: test
