@@ -16,7 +16,7 @@ devel-deps:
 	  golang.org/x/lint/golint            \
 	  github.com/Songmu/goxz/cmd/goxz     \
 	  github.com/Songmu/godzil/cmd/godzil \
-	  github.com/Songmu/tcnksm/ghr        \
+	  github.com/tcnksm/ghr               \
 	  github.com/Songmu/gocredits/cmd/gocredits
 
 .PHONY: test
