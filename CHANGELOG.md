@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.10.1](https://github.com/Songmu/ghch/compare/v0.10.0...v0.10.1) (2019-11-06)
+
+* introduce GitHub Actions [#27](https://github.com/Songmu/ghch/pull/27) ([Songmu](https://github.com/Songmu))
+* Adjust func Run interface [#26](https://github.com/Songmu/ghch/pull/26) ([Songmu](https://github.com/Songmu))
+
 ## [v0.10.0](https://github.com/Songmu/ghch/compare/v0.5.1...v0.10.0) (2019-04-30)
 
 * migrate from octokit to go-github/github [#25](https://github.com/Songmu/ghch/pull/25) ([Songmu](https://github.com/Songmu))
