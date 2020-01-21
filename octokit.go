@@ -23,6 +23,9 @@ func reducePR(pr *github.PullRequest) *github.PullRequest {
 }
 
 func reduceUser(u *github.User) *github.User {
+	if u == nil {
+		return u
+	}
 	return &github.User{
 		Login:     u.Login,
 		AvatarURL: u.AvatarURL,
