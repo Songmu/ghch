@@ -12,7 +12,7 @@ deps:
 
 .PHONY: devel-deps
 devel-deps:
-	shc -c '\
+	sh -c '\
 	tmpdir=$$(mktemp -d); \
 	cd $$tmpdir; \
 	go get ${u} \
