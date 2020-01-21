@@ -1,5 +1,12 @@
 # Changelog
 
+## [v0.10.2](https://github.com/Songmu/ghch/compare/v0.10.1...v0.10.2) (2020-01-21)
+
+* update deps [#31](https://github.com/Songmu/ghch/pull/31) ([Songmu](https://github.com/Songmu))
+* adjust releng [#30](https://github.com/Songmu/ghch/pull/30) ([Songmu](https://github.com/Songmu))
+* handle nil github.User in reduceUser, avoid segfault [#29](https://github.com/Songmu/ghch/pull/29) ([pda](https://github.com/pda))
+* changelog_test: TestMarkdown for ghch.Section.toMkdn [#28](https://github.com/Songmu/ghch/pull/28) ([pda](https://github.com/pda))
+
 ## [v0.10.1](https://github.com/Songmu/ghch/compare/v0.10.0...v0.10.1) (2019-11-06)
 
 * introduce GitHub Actions [#27](https://github.com/Songmu/ghch/pull/27) ([Songmu](https://github.com/Songmu))
