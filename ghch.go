@@ -19,7 +19,7 @@ import (
 
 	"github.com/Songmu/gitconfig"
 	"github.com/Songmu/gitsemvers"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v41/github"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )

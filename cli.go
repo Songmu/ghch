@@ -6,7 +6,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v41/github"
 	"github.com/jessevdk/go-flags"
 )
 
