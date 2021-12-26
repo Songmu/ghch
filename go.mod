@@ -13,7 +13,7 @@ require (
 
 require (
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/Songmu/gitmock v0.0.0-20181014095242-fa197bca6712 // indirect
+	github.com/Songmu/gitmock v0.0.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/goccy/go-yaml v1.9.4 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
