@@ -160,7 +160,7 @@ func (gh *Ghch) setToken() {
 	if gh.Token != "" {
 		return
 	}
-	gh.Token, _ = gitconfig.GitHubToken()
+	gh.Token, _ = gitconfig.GitHubToken("")
 }
 
 func (gh *Ghch) setBaseURL() {
