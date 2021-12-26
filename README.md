@@ -16,7 +16,7 @@ Generate changelog from git history, tags and merged pull requests
 
 ## Installation
 
-    % go get github.com/Songmu/ghch/cmd/ghch
+    % go install github.com/Songmu/ghch/cmd/ghch@latest
 
 ## Synopsis
 
