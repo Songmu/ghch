@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.10.3](https://github.com/Songmu/ghch/compare/v0.10.2...v0.10.3) (2021-12-26)
+
+* use Songmu/gitconfig instead of tcnksm/go-gitconfigGitconfig [#35](https://github.com/Songmu/ghch/pull/35) ([Songmu](https://github.com/Songmu))
+* go 1.17 and update deps [#34](https://github.com/Songmu/ghch/pull/34) ([Songmu](https://github.com/Songmu))
+* Fix the badge. [#33](https://github.com/Songmu/ghch/pull/33) ([shmokmt](https://github.com/shmokmt))
+
 ## [v0.10.2](https://github.com/Songmu/ghch/compare/v0.10.1...v0.10.2) (2020-01-21)
 
 * update deps [#31](https://github.com/Songmu/ghch/pull/31) ([Songmu](https://github.com/Songmu))
