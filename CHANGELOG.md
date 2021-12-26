@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.10.4](https://github.com/Songmu/ghch/compare/v0.10.3...v0.10.4) (2021-12-26)
+
+* udpate to github.com/google/go-github/v41 [#36](https://github.com/Songmu/ghch/pull/36) ([Songmu](https://github.com/Songmu))
+
 ## [v0.10.3](https://github.com/Songmu/ghch/compare/v0.10.2...v0.10.3) (2021-12-26)
 
 * use Songmu/gitconfig instead of tcnksm/go-gitconfigGitconfig [#35](https://github.com/Songmu/ghch/pull/35) ([Songmu](https://github.com/Songmu))
