@@ -15,17 +15,15 @@ jobs:
         - windows-latest
     steps:
     - name: setup go
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v2
       with:
         go-version: 1.x
     - name: checkout
-      uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
+      uses: actions/checkout@v2
     - name: lint
       run: |
-        GO111MODULE=off GOBIN=$(pwd)/bin go get golang.org/x/lint/golint
-        bin/golint -set_exit_status ./...
+        go install golang.org/x/lint/golint@latest
+        golint -set_exit_status ./...
       if: "matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest'"
     - name: test
       run: go test -coverprofile coverage.out -covermode atomic ./...
