@@ -1,7 +1,7 @@
 package ghch
 
 import (
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v41/github"
 )
 
 func reducePR(pr *github.PullRequest) *github.PullRequest {

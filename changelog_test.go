@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v41/github"
 )
 
 // https://developer.github.com/v3/pulls/#list-pull-requests
