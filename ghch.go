@@ -17,10 +17,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Songmu/gitconfig"
 	"github.com/Songmu/gitsemvers"
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
-	"github.com/tcnksm/go-gitconfig"
 	"golang.org/x/oauth2"
 )
 
@@ -160,10 +160,7 @@ func (gh *Ghch) setToken() {
 	if gh.Token != "" {
 		return
 	}
-	if gh.Token = os.Getenv("GITHUB_TOKEN"); gh.Token != "" {
-		return
-	}
-	gh.Token, _ = gitconfig.GithubToken()
+	gh.Token, _ = gitconfig.GitHubToken()
 }
 
 func (gh *Ghch) setBaseURL() {
