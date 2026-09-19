@@ -43,12 +43,12 @@ Generate changelog from git history, tags and merged pull requests
 When github's api token is required in private repository etc., it is used in the following order of priority.
 
 - command line option `--token`
-- enviroment variable `GITHUB_TOKEN`
+- environment variable `GITHUB_TOKEN`
 - `git config github.token`
 
 ## GitHub Enterprise
 
-You can use `ghch` for GitHub Enterprise. Change API endpoint via the enviromental variable.
+You can use `ghch` for GitHub Enterprise. Change the API endpoint via the `GITHUB_API` environment variable.
 
     $ export GITHUB_API=http://github.company.com/api/v3
 
