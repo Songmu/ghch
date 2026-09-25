@@ -1,9 +1,23 @@
 package ghch
 
 import (
+	"context"
 	"reflect"
 	"testing"
 )
+
+func TestInitializeClient(t *testing.T) {
+	gh := &Ghch{
+		BaseURL: "https://example.com/api/v3/",
+		Token:   "token",
+	}
+	if err := gh.initialize(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := gh.client.BaseURL(), gh.BaseURL; got != want {
+		t.Errorf("BaseURL = %q, want %q", got, want)
+	}
+}
 
 func TestParsePRLogs(t *testing.T) {
 

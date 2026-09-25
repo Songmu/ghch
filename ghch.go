@@ -5,10 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
@@ -19,7 +17,7 @@ import (
 
 	"github.com/Songmu/gitconfig"
 	"github.com/Songmu/gitsemvers"
-	"github.com/google/go-github/v41/github"
+	"github.com/google/go-github/v92/github"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
@@ -68,7 +66,7 @@ func (gh *Ghch) runAll(ctx context.Context) error {
 	}
 	if gh.Write {
 		content := "# Changelog\n\n" + strings.Join(results, "\n\n")
-		if err := ioutil.WriteFile(gh.ChangelogMd, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(gh.ChangelogMd, []byte(content), 0644); err != nil {
 			return err
 		}
 	} else {
@@ -109,7 +107,7 @@ func (gh *Ghch) run(ctx context.Context) error {
 	if gh.Write {
 		content := ""
 		if exists(gh.ChangelogMd) {
-			byt, err := ioutil.ReadFile(gh.ChangelogMd)
+			byt, err := os.ReadFile(gh.ChangelogMd)
 			if err != nil {
 				return err
 			}
@@ -117,7 +115,7 @@ func (gh *Ghch) run(ctx context.Context) error {
 		} else {
 			content = "# Changelog\n\n" + str + "\n"
 		}
-		if err := ioutil.WriteFile(gh.ChangelogMd, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(gh.ChangelogMd, []byte(content), 0644); err != nil {
 			return err
 		}
 	} else {
@@ -137,22 +135,22 @@ func (gh *Ghch) initialize(ctx context.Context) error {
 		gh.OutStream = os.Stdout
 	}
 
-	var oauthClient *http.Client
+	var opts []github.ClientOptionsFunc
 	gh.setToken()
 	if gh.Token != "" {
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: gh.Token})
-		oauthClient = oauth2.NewClient(ctx, ts)
+		opts = append(opts, github.WithHTTPClient(oauth2.NewClient(ctx, ts)))
 	}
-	gh.client = github.NewClient(oauthClient)
 
 	gh.setBaseURL()
 	if gh.BaseURL != "" {
-		u, err := url.Parse(gh.BaseURL)
-		if err != nil {
-			return err
-		}
-		gh.client.BaseURL = u
+		opts = append(opts, github.WithURLs(&gh.BaseURL, nil))
 	}
+	client, err := github.NewClient(opts...)
+	if err != nil {
+		return err
+	}
+	gh.client = client
 	return nil
 }
 
@@ -191,8 +189,6 @@ func (gh *Ghch) cmd(argv ...string) (string, error) {
 	err := cmd.Run()
 	return b.String(), err
 }
-
-var verReg = regexp.MustCompile(`^v?[0-9]+(?:\.[0-9]+){0,2}$`)
 
 func (gh *Ghch) versions() []string {
 	sv := gitsemvers.Semvers{
