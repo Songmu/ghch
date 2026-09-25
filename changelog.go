@@ -9,7 +9,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/google/go-github/v41/github"
+	"github.com/google/go-github/v92/github"
 )
 
 // Changelog contains Sectionst

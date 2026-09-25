@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
@@ -19,7 +18,7 @@ import (
 
 	"github.com/Songmu/gitconfig"
 	"github.com/Songmu/gitsemvers"
-	"github.com/google/go-github/v41/github"
+	"github.com/google/go-github/v92/github"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
@@ -137,22 +136,22 @@ func (gh *Ghch) initialize(ctx context.Context) error {
 		gh.OutStream = os.Stdout
 	}
 
-	var oauthClient *http.Client
+	var opts []github.ClientOptionsFunc
 	gh.setToken()
 	if gh.Token != "" {
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: gh.Token})
-		oauthClient = oauth2.NewClient(ctx, ts)
+		opts = append(opts, github.WithHTTPClient(oauth2.NewClient(ctx, ts)))
 	}
-	gh.client = github.NewClient(oauthClient)
 
 	gh.setBaseURL()
 	if gh.BaseURL != "" {
-		u, err := url.Parse(gh.BaseURL)
-		if err != nil {
-			return err
-		}
-		gh.client.BaseURL = u
+		opts = append(opts, github.WithURLs(&gh.BaseURL, nil))
 	}
+	client, err := github.NewClient(opts...)
+	if err != nil {
+		return err
+	}
+	gh.client = client
 	return nil
 }
 
