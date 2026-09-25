@@ -1,5 +1,12 @@
 # Changelog
 
+## [v0.11.0](https://github.com/Songmu/ghch/compare/v0.10.4...v0.11.0) - 2026-09-25
+
+- Update Go dependencies and go-github to v92 by @Songmu in https://github.com/Songmu/ghch/pull/40
+- Modernize release and dependency workflows by @Songmu in https://github.com/Songmu/ghch/pull/41
+- docs: add the installation guide with aqua by @suzuki-shunsuke in https://github.com/Songmu/ghch/pull/38
+- Fix ghalint job permission violations by @Songmu in https://github.com/Songmu/ghch/pull/43
+
 ## [v0.10.4](https://github.com/Songmu/ghch/compare/v0.10.3...v0.10.4) (2021-12-26)
 
 * udpate to github.com/google/go-github/v41 [#36](https://github.com/Songmu/ghch/pull/36) ([Songmu](https://github.com/Songmu))
