@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -67,7 +66,7 @@ func (gh *Ghch) runAll(ctx context.Context) error {
 	}
 	if gh.Write {
 		content := "# Changelog\n\n" + strings.Join(results, "\n\n")
-		if err := ioutil.WriteFile(gh.ChangelogMd, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(gh.ChangelogMd, []byte(content), 0644); err != nil {
 			return err
 		}
 	} else {
@@ -108,7 +107,7 @@ func (gh *Ghch) run(ctx context.Context) error {
 	if gh.Write {
 		content := ""
 		if exists(gh.ChangelogMd) {
-			byt, err := ioutil.ReadFile(gh.ChangelogMd)
+			byt, err := os.ReadFile(gh.ChangelogMd)
 			if err != nil {
 				return err
 			}
@@ -116,7 +115,7 @@ func (gh *Ghch) run(ctx context.Context) error {
 		} else {
 			content = "# Changelog\n\n" + str + "\n"
 		}
-		if err := ioutil.WriteFile(gh.ChangelogMd, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(gh.ChangelogMd, []byte(content), 0644); err != nil {
 			return err
 		}
 	} else {
@@ -190,8 +189,6 @@ func (gh *Ghch) cmd(argv ...string) (string, error) {
 	err := cmd.Run()
 	return b.String(), err
 }
-
-var verReg = regexp.MustCompile(`^v?[0-9]+(?:\.[0-9]+){0,2}$`)
 
 func (gh *Ghch) versions() []string {
 	sv := gitsemvers.Semvers{
