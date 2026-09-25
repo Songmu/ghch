@@ -18,6 +18,10 @@ Generate changelog from git history, tags and merged pull requests
 
     % go install github.com/Songmu/ghch/cmd/ghch@latest
 
+Using [aqua](https://aquaproj.github.io/)
+
+    % aqua g -i Songmu/ghch
+
 ## Synopsis
 
     % ghch -r /path/to/repo [--format markdown]
