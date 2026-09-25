@@ -1,11 +1,27 @@
 name: test
 on:
-  push:
+  pull_request:
     branches:
     - "**"
+  push:
+    branches:
+    - "main"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -14,28 +30,20 @@ jobs:
         - macOS-latest
         - windows-latest
     steps:
-    - name: setup go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.x
-    - name: checkout
-      uses: actions/checkout@v2
-    - name: lint
+    - name: Set git to use LF
       run: |
-        go install honnef.co/go/tools/cmd/staticcheck@v0.8.1
-        staticcheck ./...
-      if: "matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest'"
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+      if: "matrix.os == 'windows-latest'"
+    - name: checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - name: setup go
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version: stable
     - name: test
-      run: go test -coverprofile coverage.out -covermode atomic ./...
-    - name: Convert coverage to lcov
-      uses: jandelgado/gcov2lcov-action@v1.0.0
-      with:
-        infile: coverage.out
-        outfile: coverage.lcov
-      if: "matrix.os == 'ubuntu-latest'"
-    - name: Coveralls
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.github_token }}
-        path-to-lcov: coverage.lcov
-      if: "matrix.os == 'ubuntu-latest'"
+      run: go test -race -coverprofile coverage.out -covermode atomic ./...
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
